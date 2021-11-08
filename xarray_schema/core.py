@@ -3,11 +3,7 @@ from typing import Any, Callable, Dict, Hashable, Iterable, Tuple, Union
 import numpy as np
 import xarray as xr
 
-# Leaving off here:
-# Need to:
-# - write tests
-# - typing
-# - document missing features (mostly class based args)
+# TODOs:
 # - api grouping, should the constructors look similar to the DataArray/Dataset constructors
 
 
