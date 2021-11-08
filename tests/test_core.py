@@ -70,6 +70,17 @@ def test_dataarray_validate_dims():
         schema.validate(da)
 
 
+def test_dataarray_validate_array_type():
+
+    da = xr.DataArray(np.ones(4), dims=['x'])
+    schema = DataArraySchema(array_type=np.ndarray)
+    schema.validate(da)
+
+    schema = DataArraySchema(array_type=float)
+    with pytest.raises(SchemaError, match=r'.*(float).*'):
+        schema.validate(da)
+
+
 def test_dataset_empty_constructor():
     ds_schema = DatasetSchema()
     assert hasattr(ds_schema, 'validate')

@@ -8,10 +8,29 @@ import xarray as xr
 
 
 class SchemaError(Exception):
+    '''Custom Schema Error'''
+
     pass
 
 
 class DataArraySchema:
+    '''A light-weight xarray.DataArray validator
+
+    Parameters
+    ----------
+    dtype : Any, optional
+        Datatype of the the variable. If a string is specified it must be a valid NumPy data type value, by default None
+    shape : Tuple[Union[int, None]], optional
+        Shape of the DataArray. `None` may be used as a wildcard value. By default None
+    dims : Tuple[Union[Hashable, None]], optional
+        Dimensions of the DataArray.  `None` may be used as a wildcard value. By default None
+    name : str, optional
+        Name of the DataArray, by default None
+    array_type : Any, optional
+        Type of the underlying data in a DataArray (e.g. `numpy.ndarray`), by default None
+    checks : Iterable[Callable], optional
+        List of callables that take and return a DataArray, by default None'''
+
     def __init__(
         self,
         dtype: Any = None,
@@ -20,9 +39,9 @@ class DataArraySchema:
         coords: Dict[Hashable, Any] = None,
         chunks: Dict[Hashable, Union[int, None]] = None,
         name: str = None,
-        checks: Iterable[Callable] = None,
         array_type: Any = None,
         attrs: Dict[Hashable, Any] = None,
+        checks: Iterable[Callable] = None,
     ) -> None:
 
         self.dtype = dtype
@@ -37,6 +56,22 @@ class DataArraySchema:
         self.checks = checks if checks is not None else []
 
     def validate(self, da: xr.DataArray) -> xr.DataArray:
+        '''Check if the DataArray complies with the Schema.
+
+        Parameters
+        ----------
+        da : xr.DataArray
+            DataArray to be validated
+
+        Returns
+        -------
+        xr.DataArray
+            Validated DataArray
+
+        Raises
+        ------
+        SchemaError
+        '''
 
         if self.dtype is not None and not np.issubdtype(da.dtype, self.dtype):
             raise SchemaError(f'dtype {da.dtype} != {self.dtype}')
@@ -84,6 +119,16 @@ class DataArraySchema:
 
 
 class DatasetSchema:
+    '''A light-weight xarray.Dataset validator
+
+    Parameters
+    ----------
+    data_vars : mapping of variable names and DataArraySchemas, optional
+        Per-variable DataArraySchema's, by default None
+    checks : Iterable[Callable], optional
+        Dataset wide checks, by default None
+    '''
+
     def __init__(
         self,
         data_vars: Dict[Hashable, Union[DataArraySchema, None]] = None,
@@ -98,6 +143,22 @@ class DatasetSchema:
         self.checks = checks
 
     def validate(self, ds: xr.Dataset) -> xr.Dataset:
+        '''Check if the Dataset complies with the Schema.
+
+        Parameters
+        ----------
+        ds : xr.Dataset
+            Dataset to be validated
+
+        Returns
+        -------
+        xr.Dataset
+            Validated Dataset
+
+        Raises
+        ------
+        SchemaError
+        '''
 
         if self.data_vars is not None:
             for key, da_schema in self.data_vars.items():
