@@ -15,7 +15,6 @@ Schema validation for Xarray
 This package is in the early stages of development. Install it from source:
 
 ```shell
-pip install git+git://github.com/TomNicholas/datatree
 pip install git+git://github.com/carbonplan/xarray-schema
 ```
 
