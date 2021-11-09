@@ -103,7 +103,17 @@ class DataArraySchema:
             raise NotImplementedError('coords schema not implemented yet')
 
         if self.chunks:
-            raise NotImplementedError('chunk schema not implemented yet')
+            dim_chunks = dict(zip(da.dims, da.chunks))
+            for key, ec in self.chunks.items():
+                if isinstance(ec, int):
+                    for ac in dim_chunks[key][:-1]:
+                        if ac != ec:
+                            raise SchemaError(f'{key} chunks did not match: {ac} != {ec}')
+
+                else:  # assumes ec is an iterable
+                    ac = dim_chunks[key]
+                    if tuple(ac) != tuple(ec):
+                        raise SchemaError(f'{key} chunks did not match: {ac} != {ec}')
 
         if self.attrs:
             raise NotImplementedError('attrs schema not implemented yet')
