@@ -81,6 +81,28 @@ def test_dataarray_validate_array_type():
         schema.validate(da)
 
 
+def test_dataarray_validate_chunks():
+    pytest.importorskip('dask')
+
+    da = xr.DataArray(np.ones(4), dims=['x']).chunk({'x': 2})
+    schema = DataArraySchema(chunks={'x': 2})
+    schema.validate(da)
+
+    schema = DataArraySchema(chunks={'x': (2, 2)})
+    schema.validate(da)
+
+    schema = DataArraySchema(chunks={'x': [2, 2]})
+    schema.validate(da)
+
+    schema = DataArraySchema(chunks={'x': 3})
+    with pytest.raises(SchemaError, match=r'.*(3).*'):
+        schema.validate(da)
+
+    schema = DataArraySchema(chunks={'x': (2, 1)})
+    with pytest.raises(SchemaError, match=r'.*(2, 1).*'):
+        schema.validate(da)
+
+
 def test_dataset_empty_constructor():
     ds_schema = DatasetSchema()
     assert hasattr(ds_schema, 'validate')
