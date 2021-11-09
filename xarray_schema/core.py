@@ -103,7 +103,14 @@ class DataArraySchema:
             raise NotImplementedError('coords schema not implemented yet')
 
         if self.chunks:
-            raise NotImplementedError('chunk schema not implemented yet')
+            # ensure that the chunks are what you want them to be
+            for dim, expected in self.chunks.items():
+                # for special case of chunksize=-1, make the expected equal to the full length of that dimension
+                if expected == -1:
+                    expected = len(da[dim])
+                actual = da.chunks[dim][0]
+                if actual != expected:
+                    raise SchemaError(f'chunk mismatch for dimension {dim}: {actual} != {expected}')
 
         if self.attrs:
             raise NotImplementedError('attrs schema not implemented yet')
