@@ -72,6 +72,7 @@ class DataArraySchema:
         ------
         SchemaError
         '''
+        assert isinstance(da, xr.core.dataarray.DataArray),'Input is not an xarray DataArray and schema for chunks are not yet implemented'
 
         if self.dtype is not None and not np.issubdtype(da.dtype, self.dtype):
             raise SchemaError(f'dtype {da.dtype} != {self.dtype}')
@@ -103,14 +104,21 @@ class DataArraySchema:
             raise NotImplementedError('coords schema not implemented yet')
 
         if self.chunks:
-            # ensure that the chunks are what you want them to be
-            for dim, expected in self.chunks.items():
-                # for special case of chunksize=-1, make the expected equal to the full length of that dimension
-                if expected == -1:
-                    expected = len(da[dim])
-                actual = da.chunks[dim][0]
-                if actual != expected:
-                    raise SchemaError(f'chunk mismatch for dimension {dim}: {actual} != {expected}')
+            dim_chunks = dict(zip(da.dims, da.chunks))
+            for key, ec in self.chunks.items():
+                if isinstance(ec, int):
+                    # handles case of expected chunksize is shorthand of -1 which translates to the full length of dimension
+                    if ec==-1:
+                        ec = len(da[key])
+                        # grab the first entry in da's tuple of chunks to be representative (as it should be assuming they're regular)
+                    ac = dim_chunks[key][0]
+                    if ac != ec:
+                        raise SchemaError(f'{key} chunks did not match: {ac} != {ec}')
+
+                else:  # assumes ec is an iterable
+                    ac = dim_chunks[key]
+                    if tuple(ac) != tuple(ec):
+                        raise SchemaError(f'{key} chunks did not match: {ac} != {ec}')
 
         if self.attrs:
             raise NotImplementedError('attrs schema not implemented yet')
@@ -121,8 +129,6 @@ class DataArraySchema:
         if self.checks:
             for check in self.checks:
                 da = check(da)
-
-        return da
 
 
 class DatasetSchema:
