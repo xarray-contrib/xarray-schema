@@ -72,7 +72,8 @@ class DataArraySchema:
         ------
         SchemaError
         '''
-        assert isinstance(da, xr.core.dataarray.DataArray),'Input is not an xarray DataArray and schema for chunks are not yet implemented'
+        if not isinstance(da, xr.DataArray):
+            raise ValueError('Input must be a xarray.DataArray')
 
         if self.dtype is not None and not np.issubdtype(da.dtype, self.dtype):
             raise SchemaError(f'dtype {da.dtype} != {self.dtype}')
