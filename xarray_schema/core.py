@@ -133,6 +133,8 @@ class DataArraySchema:
         if self.checks:
             for check in self.checks:
                 da = check(da)
+        
+        return da
 
 
 class DatasetSchema:
