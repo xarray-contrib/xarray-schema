@@ -2,7 +2,7 @@ from typing import Any, Callable, Dict, Hashable, Iterable, Tuple, Union
 
 import numpy as np
 import xarray as xr
-
+from dask.array.core import _check_regular_chunks
 # TODOs:
 # - api grouping, should the constructors look similar to the DataArray/Dataset constructors
 
@@ -72,6 +72,8 @@ class DataArraySchema:
         ------
         SchemaError
         '''
+        if da.chunks:
+            assert _check_regular_chunks(da.chunks), 'Good gracious no! Chunks are not regular!'
         if not isinstance(da, xr.DataArray):
             raise ValueError('Input must be a xarray.DataArray')
 
@@ -106,11 +108,12 @@ class DataArraySchema:
 
         if self.chunks:
             dim_chunks = dict(zip(da.dims, da.chunks))
+            dim_sizes = dict(zip(da.dims, da.shape))
             for key, ec in self.chunks.items():
                 if isinstance(ec, int):
                     # handles case of expected chunksize is shorthand of -1 which translates to the full length of dimension
-                    if ec==-1:
-                        ec = len(da[key])
+                    if ec == -1:
+                        ec = dim_sizes[key]
                         # grab the first entry in da's tuple of chunks to be representative (as it should be assuming they're regular)
                     ac = dim_chunks[key][0]
                     if ac != ec:

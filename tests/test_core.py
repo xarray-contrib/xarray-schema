@@ -101,6 +101,26 @@ def test_dataarray_validate_chunks():
     schema = DataArraySchema(chunks={'x': (2, 1)})
     with pytest.raises(SchemaError, match=r'.*(2, 1).*'):
         schema.validate(da)
+    
+    # check that when expected chunk == -1 it fails 
+    schema = DataArraySchema(chunks={'x': -1})
+    with pytest.raises(SchemaError, match=r'.*(4).*'):
+        schema.validate(da)
+
+    # check that when chunking schema is -1 it also works
+    # both when chunking is specified as -1 and as 4
+    schema = DataArraySchema(chunks={'x': 4})
+    da = xr.DataArray(np.ones(4), dims=['x']).chunk({'x': -1})
+    schema.validate(da)
+
+    schema = DataArraySchema(chunks={'x': -1})
+    da = xr.DataArray(np.ones(4), dims=['x']).chunk({'x': 4})
+    schema.validate(da)
+
+    schema = DataArraySchema(chunks={'x': -1})
+    da = xr.DataArray(np.ones(4), dims=['x']).chunk({'x': -1})
+    schema.validate(da)
+
 
 
 def test_dataset_empty_constructor():
@@ -125,3 +145,9 @@ def test_dataset_example():
         }
     )
     ds_schema.validate(ds)
+
+def test_validate():
+    schema = DataArraySchema()
+    da = xr.DataArray(np.ones(4), dims=['x']).chunk({'x': (1,2,1)})
+    with pytest.raises(AssertionError, match=r'.*(gracious).*'):
+        schema.validate(da)
