@@ -112,7 +112,7 @@ class DataArraySchema:
             for key, ec in self.chunks.items():
                 if isinstance(ec, int):
                     # handles case of expected chunksize is shorthand of -1 which translates to the full length of dimension
-                    if ec == -1:
+                    if ec < 0:
                         ec = dim_sizes[key]
                         # grab the first entry in da's tuple of chunks to be representative (as it should be assuming they're regular)
                     ac = dim_chunks[key][0]
