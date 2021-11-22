@@ -72,10 +72,11 @@ class DataArraySchema:
         ------
         SchemaError
         '''
-        if da.chunks:
-            assert _check_regular_chunks(da.chunks), 'Good gracious no! Chunks are not regular!'
         if not isinstance(da, xr.DataArray):
             raise ValueError('Input must be a xarray.DataArray')
+        
+        if da.chunks:
+            assert _check_regular_chunks(da.chunks), 'Good gracious no! Chunks are not regular!'
 
         if self.dtype is not None and not np.issubdtype(da.dtype, self.dtype):
             raise SchemaError(f'dtype {da.dtype} != {self.dtype}')
