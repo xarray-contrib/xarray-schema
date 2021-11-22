@@ -36,6 +36,12 @@ schema = DataArraySchema(dtype=np.integer, name='foo', shape=(4, ), dims=['x'])
 schema.validate(da)
 ```
 
+You can also use it to validate a Dataset like so:
+```
+schema_ds = DatasetSchema({'foo': schema})
+
+schema_ds.validate(da.to_dataset())
+
 # roadmap
 
 This is a very early prototype of a library. Some key things are missing:
