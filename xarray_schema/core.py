@@ -3,6 +3,7 @@ from typing import Any, Callable, Dict, Hashable, Iterable, Tuple, Union
 import numpy as np
 import xarray as xr
 from dask.array.core import _check_regular_chunks
+
 # TODOs:
 # - api grouping, should the constructors look similar to the DataArray/Dataset constructors
 
@@ -24,6 +25,9 @@ class DataArraySchema:
         Shape of the DataArray. `None` may be used as a wildcard value. By default None
     dims : Tuple[Union[Hashable, None]], optional
         Dimensions of the DataArray.  `None` may be used as a wildcard value. By default None
+    chunks : Union[bool, Dict[Hashable, Union[int, None]]], optional
+        If bool, specifies whether DataArray is chunked or not, agnostic to chunk sizes.
+        If dict, includes the expected chunks for the DataArray, by default None
     name : str, optional
         Name of the DataArray, by default None
     array_type : Any, optional
@@ -37,7 +41,7 @@ class DataArraySchema:
         shape: Tuple[Union[int, None]] = None,
         dims: Tuple[Union[Hashable, None]] = None,
         coords: Dict[Hashable, Any] = None,
-        chunks: Dict[Hashable, Union[int, None]] = None,
+        chunks: Union[bool, Dict[Hashable, Union[int, None]]] = None,
         name: str = None,
         array_type: Any = None,
         attrs: Dict[Hashable, Any] = None,
@@ -74,9 +78,10 @@ class DataArraySchema:
         '''
         if not isinstance(da, xr.DataArray):
             raise ValueError('Input must be a xarray.DataArray')
-        
-        if da.chunks:
-            assert _check_regular_chunks(da.chunks), 'Good gracious no! Chunks are not regular!'
+
+        if self.chunks is not None:
+            if self.chunks is False and da.chunks:
+                raise SchemaError('Schema expected unchunked DataArray but it is chunked!')
 
         if self.dtype is not None and not np.issubdtype(da.dtype, self.dtype):
             raise SchemaError(f'dtype {da.dtype} != {self.dtype}')
@@ -108,22 +113,30 @@ class DataArraySchema:
             raise NotImplementedError('coords schema not implemented yet')
 
         if self.chunks:
-            dim_chunks = dict(zip(da.dims, da.chunks))
-            dim_sizes = dict(zip(da.dims, da.shape))
-            for key, ec in self.chunks.items():
-                if isinstance(ec, int):
-                    # handles case of expected chunksize is shorthand of -1 which translates to the full length of dimension
-                    if ec < 0:
-                        ec = dim_sizes[key]
-                        # grab the first entry in da's tuple of chunks to be representative (as it should be assuming they're regular)
-                    ac = dim_chunks[key][0]
-                    if ac != ec:
-                        raise SchemaError(f'{key} chunks did not match: {ac} != {ec}')
+            if self.chunks is True:
+                if not da.chunks:
+                    raise SchemaError('Schema expected DataArray to be chunked but it is not')
 
-                else:  # assumes ec is an iterable
-                    ac = dim_chunks[key]
-                    if tuple(ac) != tuple(ec):
-                        raise SchemaError(f'{key} chunks did not match: {ac} != {ec}')
+            else:
+                assert type(self.chunks) == dict, 'Must pass chunks information as dictionary'
+                dim_chunks = dict(zip(da.dims, da.chunks))
+                dim_sizes = dict(zip(da.dims, da.shape))
+                # check whether chunk sizes are regular because we assume the first chunk to be representative below
+                assert _check_regular_chunks(da.chunks), 'Good gracious no! Chunks are not regular!'
+                for key, ec in self.chunks.items():
+                    if isinstance(ec, int):
+                        # handles case of expected chunksize is shorthand of -1 which translates to the full length of dimension
+                        if ec < 0:
+                            ec = dim_sizes[key]
+                            # grab the first entry in da's tuple of chunks to be representative (since we've checked above that they're regular)
+                        ac = dim_chunks[key][0]
+                        if ac != ec:
+                            raise SchemaError(f'{key} chunks did not match: {ac} != {ec}')
+
+                    else:  # assumes ec is an iterable
+                        ac = dim_chunks[key]
+                        if tuple(ac) != tuple(ec):
+                            raise SchemaError(f'{key} chunks did not match: {ac} != {ec}')
 
         if self.attrs:
             raise NotImplementedError('attrs schema not implemented yet')
@@ -134,7 +147,7 @@ class DataArraySchema:
         if self.checks:
             for check in self.checks:
                 da = check(da)
-        
+
         return da
 
 

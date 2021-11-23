@@ -101,8 +101,8 @@ def test_dataarray_validate_chunks():
     schema = DataArraySchema(chunks={'x': (2, 1)})
     with pytest.raises(SchemaError, match=r'.*(2, 1).*'):
         schema.validate(da)
-    
-    # check that when expected chunk == -1 it fails 
+
+    # check that when expected chunk == -1 it fails
     schema = DataArraySchema(chunks={'x': -1})
     with pytest.raises(SchemaError, match=r'.*(4).*'):
         schema.validate(da)
@@ -121,6 +121,20 @@ def test_dataarray_validate_chunks():
     da = xr.DataArray(np.ones(4), dims=['x']).chunk({'x': -1})
     schema.validate(da)
 
+    # test for agnostic chunks
+    schema = DataArraySchema(chunks=True)
+    da = xr.DataArray(np.ones(4), dims=['x'])
+    with pytest.raises(SchemaError, match='Schema expected DataArray to be chunked but it is not'):
+        schema.validate(da)
+
+    # now try passing an irregularly chunked data array
+    da = xr.DataArray(np.ones(4), dims=['x']).chunk({'x': (1, 2, 1)})
+    schema.validate(da)
+
+    # test the check for regular chunk sizes
+    schema = DataArraySchema(chunks={'x': -1})
+    with pytest.raises(AssertionError, match=r'.*(gracious).*'):
+        schema.validate(da)
 
 
 def test_dataset_empty_constructor():
@@ -146,8 +160,12 @@ def test_dataset_example():
     )
     ds_schema.validate(ds)
 
+
 def test_validate():
-    schema = DataArraySchema()
-    da = xr.DataArray(np.ones(4), dims=['x']).chunk({'x': (1,2,1)})
-    with pytest.raises(AssertionError, match=r'.*(gracious).*'):
+    da = xr.DataArray(np.ones(4), dims=['x']).chunk({'x': (1, 2, 1)})
+    schema = DataArraySchema(chunks=False)
+    # check that da is unchunked
+    with pytest.raises(SchemaError, match='Schema expected unchunked DataArray but it is chunked!'):
         schema.validate(da)
+    da = xr.DataArray(np.ones(4), dims=['x'])
+    schema.validate(da)
