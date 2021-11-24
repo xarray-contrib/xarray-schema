@@ -1,5 +1,5 @@
-from typing import Dict, Hashable, Tuple, Union
+from typing import Dict, Tuple, Union
 
-DimsT = Tuple[Union[Hashable, None]]
+DimsT = Tuple[Union[str, None]]
 ShapeT = Tuple[Union[int, None]]
-ChunksT = Union[bool, Dict[Hashable, Union[int, None]]]
+ChunksT = Union[bool, Dict[str, Union[int, None]]]

@@ -51,10 +51,10 @@ class DatasetSchema(BaseSchema):
         if self.data_vars is not None:
             for key, da_schema in self.data_vars.items():
                 if da_schema is not None:
-                    da_schema.validate(ds.data_vars[key])
-                else:
                     if key not in ds.data_vars:
                         raise SchemaError(f'data variable {key} not in ds')
+                    else:
+                        da_schema.validate(ds.data_vars[key])
 
         if self.coords is not None:
             raise NotImplementedError('coords schema not implemented yet')

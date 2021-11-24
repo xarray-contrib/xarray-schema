@@ -1,4 +1,4 @@
-from typing import Any, Dict, Hashable, List, Union
+from typing import Any, Dict, List, Union
 
 import numpy as np
 
@@ -48,7 +48,7 @@ class DimsSchema(BaseSchema):
 
         Parameters
         ----------
-        dims : Tuple[Union[Hashable, None]]
+        dims : Tuple[Union[str, None]]
             Dimensions of the DataArray. `None` may be used as a wildcard value.
         '''
         if len(self.dims) != len(dims):
@@ -131,7 +131,11 @@ class ChunksSchema(BaseSchema):
         Parameters
         ----------
         chunks : bool or dict
-            chunks of the DataArray. `None` may be used as a wildcard value.
+            Chunks of the DataArray.
+        dims : tuple of str
+            Dimension keys from array.
+        shape : tuple of int
+            Shape of array.
         '''
         if self.chunks is True:
             if chunks is None:
@@ -159,7 +163,7 @@ class ChunksSchema(BaseSchema):
                         raise SchemaError(f'{key} chunks did not match: {ac} != {ec}')
 
     @property
-    def json(self) -> Union[str, Dict[Hashable, Union[bool, int, List[int]]]]:
+    def json(self) -> Union[str, Dict[str, Union[bool, int, List[int]]]]:
         if isinstance(self.chunks, bool):
             return self.chunks
         else:

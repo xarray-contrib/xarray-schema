@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Hashable, Iterable, List, Union
+from typing import Any, Callable, Dict, Iterable, List, Union
 
 import numpy as np
 import xarray as xr
@@ -26,7 +26,7 @@ class DataArraySchema(BaseSchema):
         Shape of the DataArray. `None` may be used as a wildcard value. By default None
     dims : DimsT or DimsSchema, optional
         Dimensions of the DataArray.  `None` may be used as a wildcard value. By default None
-    chunks : Union[bool, Dict[Hashable, Union[int, None]]], optional
+    chunks : Union[bool, Dict[str, Union[int, None]]], optional
         If bool, specifies whether DataArray is chunked or not, agnostic to chunk sizes.
         If dict, includes the expected chunks for the DataArray, by default None
     name : str, optional
@@ -45,10 +45,10 @@ class DataArraySchema(BaseSchema):
         shape: Union[ShapeT, ShapeSchema] = None,
         dims: Union[DimsT, DimsSchema] = None,
         name: Union[str, NameSchema] = None,
-        coords: Dict[Hashable, Any] = None,
+        coords: Dict[str, Any] = None,
         chunks: Union[ChunksT, ChunksSchema] = None,
         array_type: Any = None,
-        attrs: Dict[Hashable, Any] = None,
+        attrs: Dict[str, Any] = None,
         checks: Iterable[Callable] = None,
     ) -> None:
 

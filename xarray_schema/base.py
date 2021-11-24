@@ -17,8 +17,7 @@ class BaseSchema:
 
     _json_schema: Dict[str, Any]
 
-    @abstractmethod
-    def validate(self, obj) -> None:
+    def validate(self, obj: Any) -> None:
         pass
 
     @property

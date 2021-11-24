@@ -14,6 +14,18 @@ from xarray_schema.components import (
 )
 
 
+@pytest.fixture
+def ds():
+    ds = xr.Dataset(
+        {
+            'x': xr.DataArray(np.arange(4) - 2, dims='x'),
+            'foo': xr.DataArray(np.ones(4, dtype='i4'), dims='x'),
+            'bar': xr.DataArray(np.arange(8, dtype=np.float32).reshape(4, 2), dims=('x', 'y')),
+        }
+    )
+    return ds
+
+
 @pytest.mark.parametrize(
     'component, schema_args, validate, json',
     [
@@ -101,15 +113,7 @@ def test_dataset_empty_constructor():
     ds_schema.json == {}
 
 
-def test_dataset_example():
-
-    ds = xr.Dataset(
-        {
-            'x': xr.DataArray(np.arange(4) - 2, dims='x'),
-            'foo': xr.DataArray(np.ones(4, dtype='i4'), dims='x'),
-            'bar': xr.DataArray(np.arange(8, dtype=np.float32).reshape(4, 2), dims=('x', 'y')),
-        }
-    )
+def test_dataset_example(ds):
 
     ds_schema = DatasetSchema(
         {
@@ -117,6 +121,48 @@ def test_dataset_example():
             'bar': DataArraySchema(name='bar', dtype=np.floating, dims=['x', 'y']),
         }
     )
+    assert list(ds_schema.json['data_vars'].keys()) == ['foo', 'bar']
     ds_schema.validate(ds)
 
-    assert list(ds_schema.json['data_vars'].keys()) == ['foo', 'bar']
+    ds['foo'] = ds.foo.astype('float32')
+    with pytest.raises(SchemaError, match='dtype'):
+        ds_schema.validate(ds)
+
+    ds = ds.drop_vars('foo')
+    with pytest.raises(SchemaError, match='variable foo'):
+        ds_schema.validate(ds)
+
+
+def test_checks_ds(ds):
+    def check_foo(ds):
+        assert 'foo' in ds
+
+    ds_schema = DatasetSchema(checks=[check_foo])
+    ds_schema.validate(ds)
+
+    ds = ds.drop_vars('foo')
+    with pytest.raises(AssertionError):
+        ds_schema.validate(ds)
+
+    ds_schema = DatasetSchema(checks=[])
+    ds_schema.validate(ds)
+
+
+def test_checks_da(ds):
+    da = ds['foo']
+
+    def check_foo(da):
+        assert da.name == 'foo'
+
+    def check_bar(da):
+        assert da.name == 'bar'
+
+    schema = DataArraySchema(checks=[check_foo])
+    schema.validate(da)
+
+    schema = DataArraySchema(checks=[check_bar])
+    with pytest.raises(AssertionError):
+        schema.validate(da)
+
+    schema = DataArraySchema(checks=[])
+    schema.validate(da)
