@@ -1,4 +1,5 @@
-from typing import Any, Dict, List, Union
+from collections.abc import Iterable
+from typing import Any, Dict, Hashable, Optional, Tuple, Union
 
 import numpy as np
 
@@ -29,11 +30,11 @@ class DTypeSchema(BaseSchema):
 
     @property
     def json(self) -> str:
-        try:
+        if isinstance(self.dtype, np.dtype):
             return self.dtype.str
-        except AttributeError:
-            # this handles generic dtypes
-            return self.dtype.__name__
+        else:
+            # fallbacks
+            return getattr(self.dtype, '__name__', str(self.dtype))
 
 
 class DimsSchema(BaseSchema):
@@ -43,7 +44,7 @@ class DimsSchema(BaseSchema):
     def __init__(self, dims: DimsT) -> None:
         self.dims = dims
 
-    def validate(self, dims: DimsT) -> None:
+    def validate(self, dims: tuple) -> None:
         '''Validate dimensions
 
         Parameters
@@ -70,7 +71,7 @@ class ShapeSchema(BaseSchema):
     def __init__(self, shape: ShapeT) -> None:
         self.shape = shape
 
-    def validate(self, shape: ShapeT) -> None:
+    def validate(self, shape: tuple) -> None:
         '''Validate shape
 
         Parameters
@@ -99,7 +100,7 @@ class NameSchema(BaseSchema):
     def __init__(self, name: str) -> None:
         self.name = name
 
-    def validate(self, name: str) -> None:
+    def validate(self, name: Hashable) -> None:
         '''Validate name
 
         Parameters
@@ -125,25 +126,27 @@ class ChunksSchema(BaseSchema):
     def __init__(self, chunks: ChunksT) -> None:
         self.chunks = chunks
 
-    def validate(self, chunks: ChunksT, dims: tuple, shape: tuple) -> None:
+    def validate(
+        self, chunks: Optional[Tuple[Tuple[int, ...], ...]], dims: tuple, shape: tuple
+    ) -> None:
         '''Validate chunks
 
         Parameters
         ----------
-        chunks : bool or dict
-            Chunks of the DataArray.
+        chunks : tuple
+            Chunks from ``DataArray.chunks``
         dims : tuple of str
             Dimension keys from array.
         shape : tuple of int
             Shape of array.
         '''
-        if self.chunks is True:
-            if chunks is None:
+
+        if isinstance(self.chunks, bool):
+            if self.chunks and not chunks:
                 raise SchemaError('expected array to be chunked but it is not')
-        elif self.chunks is False:
-            if chunks is not None:
+            elif not self.chunks and chunks:
                 raise SchemaError('expected unchunked array but it is chunked')
-        else:  # chunks is dict-like
+        elif isinstance(self.chunks, dict):
             dim_chunks = dict(zip(dims, chunks))
             dim_sizes = dict(zip(dims, shape))
             # check whether chunk sizes are regular because we assume the first chunk to be representative below
@@ -159,17 +162,19 @@ class ChunksSchema(BaseSchema):
 
                 else:  # assumes ec is an iterable
                     ac = dim_chunks[key]
-                    if tuple(ac) != tuple(ec):
+                    if ec is not None and tuple(ac) != tuple(ec):
                         raise SchemaError(f'{key} chunks did not match: {ac} != {ec}')
+        else:
+            raise ValueError(f'got unknown chunks type: {type(self.chunks)}')
 
     @property
-    def json(self) -> Union[str, Dict[str, Union[bool, int, List[int]]]]:
+    def json(self) -> Union[bool, Dict[str, Any]]:
         if isinstance(self.chunks, bool):
             return self.chunks
         else:
             obj = {}
             for key, val in self.chunks.items():
-                if isinstance(val, tuple):
+                if isinstance(val, Iterable):
                     obj[key] = list(val)
                 else:
                     obj[key] = val

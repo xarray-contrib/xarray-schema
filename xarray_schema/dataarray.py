@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, List, Union
+from typing import Any, Callable, Dict, List, Union
 
 import numpy as np
 import xarray as xr
@@ -33,11 +33,18 @@ class DataArraySchema(BaseSchema):
         Name of the DataArray, by default None
     array_type : Any, optional
         Type of the underlying data in a DataArray (e.g. `numpy.ndarray`), by default None
-    checks : Iterable[Callable], optional
+    checks : List[Callable], optional
         List of callables that take and return a DataArray, by default None
     '''
 
     _schema_slots = ['dtype', 'dims', 'shape', 'coords', 'name', 'chunks', 'attrs', 'array_type']
+
+    _dtype: Union[DTypeSchema, None]
+    _shape: Union[ShapeSchema, None]
+    _dims: Union[DimsSchema, None]
+    _name: Union[NameSchema, None]
+    _chunks: Union[ChunksSchema, None]
+    _array_type: Union[ArrayTypeSchema, None]
 
     def __init__(
         self,
@@ -49,7 +56,7 @@ class DataArraySchema(BaseSchema):
         chunks: Union[ChunksT, ChunksSchema] = None,
         array_type: Any = None,
         attrs: Dict[str, Any] = None,
-        checks: Iterable[Callable] = None,
+        checks: List[Callable] = None,
     ) -> None:
 
         self.dtype = dtype
@@ -63,18 +70,18 @@ class DataArraySchema(BaseSchema):
         self.checks = checks
 
     @property
-    def dtype(self) -> DTypeSchema:
+    def dtype(self) -> Union[DTypeSchema, None]:
         return self._dtype
 
     @dtype.setter
-    def dtype(self, value):
+    def dtype(self, value: Union[DTypeSchema, np.typing.DTypeLike, None]):
         if value is None or isinstance(value, DTypeSchema):
             self._dtype = value
         else:
             self._dtype = DTypeSchema(value)
 
     @property
-    def dims(self) -> DimsSchema:
+    def dims(self) -> Union[DimsSchema, None]:
         return self._dims
 
     @dims.setter
@@ -89,7 +96,7 @@ class DataArraySchema(BaseSchema):
         return self._shape
 
     @shape.setter
-    def shape(self, value):
+    def shape(self, value: Union[ShapeSchema, ShapeT, None]):
         if value is None or isinstance(value, ShapeSchema):
             self._shape = value
         else:
