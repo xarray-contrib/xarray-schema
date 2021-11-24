@@ -3,13 +3,86 @@ import pytest
 import xarray as xr
 
 from xarray_schema import DataArraySchema, DatasetSchema
-from xarray_schema.core import SchemaError
+from xarray_schema.base import SchemaError
+from xarray_schema.components import (
+    ArrayTypeSchema,
+    ChunksSchema,
+    DimsSchema,
+    DTypeSchema,
+    NameSchema,
+    ShapeSchema,
+)
+
+
+@pytest.mark.parametrize(
+    'component, schema_args, validate, json',
+    [
+        (DTypeSchema, np.integer, ['i4', 'int', np.int32], 'integer'),
+        (DTypeSchema, np.int64, ['i8', np.int64], '<i8'),
+        (DTypeSchema, '<i8', ['i8', np.int64], '<i8'),
+        (DimsSchema, ('foo', None), [('foo', 'bar'), ('foo', 'baz')], ['foo', None]),
+        (DimsSchema, ('foo', 'bar'), [('foo', 'bar')], ['foo', 'bar']),
+        (ShapeSchema, (1, 2, None), [(1, 2, 3), (1, 2, 5)], [1, 2, None]),
+        (ShapeSchema, (1, 2, 3), [(1, 2, 3)], [1, 2, 3]),
+        (NameSchema, 'foo', ['foo'], 'foo'),
+        (ArrayTypeSchema, np.ndarray, [np.array([1, 2, 3])], "<class 'numpy.ndarray'>"),
+        (ChunksSchema, True, [(((1, 1),), ('x',), (2,))], True),
+        (ChunksSchema, {'x': 2}, [(((2, 2),), ('x',), (4,))], {'x': 2}),
+        (ChunksSchema, {'x': (2, 2)}, [(((2, 2),), ('x',), (4,))], {'x': [2, 2]}),
+        (ChunksSchema, {'x': [2, 2]}, [(((2, 2),), ('x',), (4,))], {'x': [2, 2]}),
+        (ChunksSchema, {'x': 4}, [(((4,),), ('x',), (4,))], {'x': 4}),
+        (ChunksSchema, {'x': -1}, [(((4,),), ('x',), (4,))], {'x': -1}),
+        (ChunksSchema, {'x': (1, 2, 1)}, [(((1, 2, 1),), ('x',), (4,))], {'x': [1, 2, 1]}),
+    ],
+)
+def test_component_schema(component, schema_args, validate, json):
+    schema = component(schema_args)
+    for v in validate:
+        if component in [ChunksSchema]:  # special case construction
+            schema.validate(*v)
+        else:
+            schema.validate(v)
+    assert schema.json == json
+
+
+@pytest.mark.parametrize(
+    'component, schema_args, validate, match',
+    [
+        (DTypeSchema, np.integer, np.float32, r'.*float.*'),
+        (DimsSchema, ('foo', 'bar'), ('foo',), r'.*length.*'),
+        (DimsSchema, ('foo', 'bar'), ('foo', 'baz'), r'.*mismatch.*'),
+        (ShapeSchema, (1, 2, None), (1, 2), r'.*number of dimensions.*'),
+        (ShapeSchema, (1, 4, 4), (1, 3, 4), r'.*mismatch.*'),
+        (NameSchema, 'foo', 'bar', r'.*name bar != foo.*'),
+        (ArrayTypeSchema, np.ndarray, 'bar', r'.*array_type.*'),
+        (ChunksSchema, {'x': 3}, (((2, 2),), ('x',), (4,)), r'.*(3).*'),
+        (ChunksSchema, {'x': (2, 1)}, (((2, 2),), ('x',), (4,)), r'.*(2, 1).*'),
+        (ChunksSchema, True, (None, ('x',), (4,)), r'.*expected array to be chunked.*'),
+        (
+            ChunksSchema,
+            False,
+            (((2, 2),), ('x',), (4,)),
+            r'.*expected unchunked array but it is chunked*',
+        ),
+        (ChunksSchema, {'x': -1}, (((1, 2, 1),), ('x',), (4,)), r'.*did not match.*'),
+    ],
+)
+def test_component_raises_schema_error(component, schema_args, validate, match):
+    schema = component(schema_args)
+    with pytest.raises(SchemaError, match=match):
+        if component in [ChunksSchema]:  # special case construction
+            schema.validate(*validate)
+        else:
+            schema.validate(validate)
 
 
 def test_dataarray_empty_constructor():
 
+    da = xr.DataArray(np.ones(4, dtype='i4'))
     da_schema = DataArraySchema()
     assert hasattr(da_schema, 'validate')
+    assert da_schema.json == {}
+    da_schema.validate(da)
 
 
 def test_dataarray_validate_dtype():
@@ -18,128 +91,14 @@ def test_dataarray_validate_dtype():
     schema = DataArraySchema(dtype='i4')
     schema.validate(da)
 
-    schema = DataArraySchema(dtype=np.int32)
-    schema.validate(da)
-
-    schema = DataArraySchema(dtype=np.integer)
-    schema.validate(da)
-
-    schema = DataArraySchema(dtype=np.floating)
-    with pytest.raises(SchemaError, match=r'.*floating.*'):
-        schema.validate(da)
-
-
-def test_dataarray_validate_name():
-
-    da = xr.DataArray(np.ones(4), name='foo')
-    schema = DataArraySchema(name='foo')
-    schema.validate(da)
-
-    schema = DataArraySchema(name='bar')
-    with pytest.raises(SchemaError, match=r'.*foo.*'):
-        schema.validate(da)
-
-
-def test_dataarray_validate_shape():
-
-    da = xr.DataArray(np.ones(4))
-    schema = DataArraySchema(shape=(4,))
-    schema.validate(da)
-
-    schema = DataArraySchema(shape=(4, 2))
-    with pytest.raises(SchemaError, match=r'.*ndim.*'):
-        schema.validate(da)
-
-    schema = DataArraySchema(shape=(3,))
-    with pytest.raises(SchemaError, match=r'.*(4).*'):
-        schema.validate(da)
-
-
-def test_dataarray_validate_dims():
-
-    da = xr.DataArray(np.ones(4), dims=['x'])
-    schema = DataArraySchema(dims=['x'])
-    schema.validate(da)
-
-    schema = DataArraySchema(dims=(['x', 'y']))
-    with pytest.raises(SchemaError, match=r'.*length of dims.*'):
-        schema.validate(da)
-
-    schema = DataArraySchema(dims=['y'])
-    with pytest.raises(SchemaError, match=r'.*(y).*'):
-        schema.validate(da)
-
-
-def test_dataarray_validate_array_type():
-
-    da = xr.DataArray(np.ones(4), dims=['x'])
-    schema = DataArraySchema(array_type=np.ndarray)
-    schema.validate(da)
-
-    schema = DataArraySchema(array_type=float)
-    with pytest.raises(SchemaError, match=r'.*(float).*'):
-        schema.validate(da)
-
-
-def test_dataarray_validate_chunks():
-    pytest.importorskip('dask')
-
-    da = xr.DataArray(np.ones(4), dims=['x']).chunk({'x': 2})
-    schema = DataArraySchema(chunks={'x': 2})
-    schema.validate(da)
-
-    schema = DataArraySchema(chunks={'x': (2, 2)})
-    schema.validate(da)
-
-    schema = DataArraySchema(chunks={'x': [2, 2]})
-    schema.validate(da)
-
-    schema = DataArraySchema(chunks={'x': 3})
-    with pytest.raises(SchemaError, match=r'.*(3).*'):
-        schema.validate(da)
-
-    schema = DataArraySchema(chunks={'x': (2, 1)})
-    with pytest.raises(SchemaError, match=r'.*(2, 1).*'):
-        schema.validate(da)
-
-    # check that when expected chunk == -1 it fails
-    schema = DataArraySchema(chunks={'x': -1})
-    with pytest.raises(SchemaError, match=r'.*(4).*'):
-        schema.validate(da)
-
-    # check that when chunking schema is -1 it also works
-    # both when chunking is specified as -1 and as 4
-    schema = DataArraySchema(chunks={'x': 4})
-    da = xr.DataArray(np.ones(4), dims=['x']).chunk({'x': -1})
-    schema.validate(da)
-
-    schema = DataArraySchema(chunks={'x': -1})
-    da = xr.DataArray(np.ones(4), dims=['x']).chunk({'x': 4})
-    schema.validate(da)
-
-    schema = DataArraySchema(chunks={'x': -1})
-    da = xr.DataArray(np.ones(4), dims=['x']).chunk({'x': -1})
-    schema.validate(da)
-
-    # test for agnostic chunks
-    schema = DataArraySchema(chunks=True)
-    da = xr.DataArray(np.ones(4), dims=['x'])
-    with pytest.raises(SchemaError, match='Schema expected DataArray to be chunked but it is not'):
-        schema.validate(da)
-
-    # now try passing an irregularly chunked data array
-    da = xr.DataArray(np.ones(4), dims=['x']).chunk({'x': (1, 2, 1)})
-    schema.validate(da)
-
-    # test the check for regular chunk sizes
-    schema = DataArraySchema(chunks={'x': -1})
-    with pytest.raises(AssertionError, match=r'.*(gracious).*'):
-        schema.validate(da)
+    component = schema.dtype
+    assert isinstance(component, DTypeSchema)
 
 
 def test_dataset_empty_constructor():
     ds_schema = DatasetSchema()
     assert hasattr(ds_schema, 'validate')
+    ds_schema.json == {}
 
 
 def test_dataset_example():
@@ -160,12 +119,4 @@ def test_dataset_example():
     )
     ds_schema.validate(ds)
 
-
-def test_validate():
-    da = xr.DataArray(np.ones(4), dims=['x']).chunk({'x': (1, 2, 1)})
-    schema = DataArraySchema(chunks=False)
-    # check that da is unchunked
-    with pytest.raises(SchemaError, match='Schema expected unchunked DataArray but it is chunked!'):
-        schema.validate(da)
-    da = xr.DataArray(np.ones(4), dims=['x'])
-    schema.validate(da)
+    assert list(ds_schema.json['data_vars'].keys()) == ['foo', 'bar']
