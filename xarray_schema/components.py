@@ -156,7 +156,7 @@ class ChunksSchema(BaseSchema):
                     if ec < 0:
                         ec = dim_sizes[key]
                     ac = dim_chunks[key]
-                    if not all(a == ec for a in ac[:-1]) and ac[-1] <= ec:
+                    if not all(a == ec for a in ac[:-1]) or ac[-1] <= ec:
                         raise SchemaError(f'{key} chunks did not match: {ac} != {ec}')
 
                 else:  # assumes ec is an iterable

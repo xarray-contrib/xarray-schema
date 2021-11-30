@@ -87,6 +87,7 @@ def test_component_schema(component, schema_args, validate, json):
         ),
         (ChunksSchema, {'x': -1}, (((1, 2, 1),), ('x',), (4,)), r'.*did not match.*'),
         (ChunksSchema, {'x': 2}, (((2, 3, 2),), ('x',), (7,)), r'.*did not match.*'),
+        (ChunksSchema, {'x': 2}, (((2, 2, 3),), ('x',), (7,)), r'.*did not match.*'),
         (ChunksSchema, {'x': 2, 'y': -1}, (((2, 2), (5, 5)), ('x', 'y'), (4, 10)), r'.*(5).*'),
     ],
 )
