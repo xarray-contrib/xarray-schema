@@ -1,6 +1,15 @@
 from pkg_resources import DistributionNotFound, get_distribution
 
-from .core import DataArraySchema, DatasetSchema  # noqa: F401
+from .components import (  # noqa: F401
+    ArrayTypeSchema,
+    ChunksSchema,
+    DimsSchema,
+    DTypeSchema,
+    NameSchema,
+    ShapeSchema,
+)
+from .dataarray import DataArraySchema  # noqa: F401
+from .dataset import DatasetSchema  # noqa: F401
 
 try:
     __version__ = get_distribution(__name__).version

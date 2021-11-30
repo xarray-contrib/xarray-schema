@@ -8,6 +8,7 @@
 Schema validation for Xarray
 
 [![CI](https://github.com/carbonplan/ndpyramid/actions/workflows/main.yaml/badge.svg)](https://github.com/carbonplan/xarray-schema/actions/workflows/main.yaml)
+[![codecov](https://codecov.io/gh/carbonplan/xarray-schema/branch/main/graph/badge.svg?token=EI729ZRFK0)](https://codecov.io/gh/carbonplan/xarray-schema)
 ![MIT License](https://badgen.net/badge/license/MIT/blue)
 
 # installation
@@ -48,8 +49,7 @@ schema_ds.validate(da.to_dataset())
 
 This is a very early prototype of a library. Some key things are missing:
 
-1. Validation of `coords`, `chunks`, and `attrs`. None of these are implemented yet.
-1. Class-based schema's for parts of the Xarray data model. Most validations are currently made as direct comparisons (`da.name == self.name`) but a more robust approach is possible that leverages classes for each component of the data model. We're already handling some special cases using `None` as a sentinel value to allow for wildcard-like behavior in places (i.e. `dims` and `shape`)
+1. Validation of `coords` and `attrs`. These are implemented yet.
 1. Exceptions: Pandera accumulates schema exceptions and reports them all at once. Currently, we are a eagerly raising `SchemaErrors` when the are found.
 
 ## license
