@@ -155,9 +155,8 @@ class ChunksSchema(BaseSchema):
                     # handles case of expected chunksize is shorthand of -1 which translates to the full length of dimension
                     if ec < 0:
                         ec = dim_sizes[key]
-                        # grab the first entry in da's tuple of chunks to be representative (since we've checked above that they're regular)
-                    ac = dim_chunks[key][0]
-                    if ac != ec:
+                    ac = dim_chunks[key]
+                    if not all(a == ec for a in ac[:-1]) and ac[-1] <= ec:
                         raise SchemaError(f'{key} chunks did not match: {ac} != {ec}')
 
                 else:  # assumes ec is an iterable
