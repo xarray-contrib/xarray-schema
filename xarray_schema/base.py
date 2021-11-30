@@ -22,7 +22,7 @@ class BaseSchema:
 
     @property
     @abstractmethod
-    def json(self) -> Any:
+    def json(self) -> Any:  # pragma: no cover
         pass
 
     def to_json(self, **dumps_kws) -> str:

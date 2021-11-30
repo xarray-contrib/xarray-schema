@@ -38,6 +38,7 @@ def ds():
         (ShapeSchema, (1, 2, 3), [(1, 2, 3)], [1, 2, 3]),
         (NameSchema, 'foo', ['foo'], 'foo'),
         (ArrayTypeSchema, np.ndarray, [np.array([1, 2, 3])], "<class 'numpy.ndarray'>"),
+        # schema_args for ChunksSchema include [chunks, dims, shape]
         (ChunksSchema, True, [(((1, 1),), ('x',), (2,))], True),
         (ChunksSchema, {'x': 2}, [(((2, 2),), ('x',), (4,))], {'x': 2}),
         (ChunksSchema, {'x': (2, 2)}, [(((2, 2),), ('x',), (4,))], {'x': [2, 2]}),
@@ -45,6 +46,12 @@ def ds():
         (ChunksSchema, {'x': 4}, [(((4,),), ('x',), (4,))], {'x': 4}),
         (ChunksSchema, {'x': -1}, [(((4,),), ('x',), (4,))], {'x': -1}),
         (ChunksSchema, {'x': (1, 2, 1)}, [(((1, 2, 1),), ('x',), (4,))], {'x': [1, 2, 1]}),
+        (
+            ChunksSchema,
+            {'x': 2, 'y': -1},
+            [(((2, 2), (10,)), ('x', 'y'), (4, 10))],
+            {'x': 2, 'y': -1},
+        ),
     ],
 )
 def test_component_schema(component, schema_args, validate, json):
@@ -55,6 +62,7 @@ def test_component_schema(component, schema_args, validate, json):
         else:
             schema.validate(v)
     assert schema.json == json
+    assert isinstance(schema.to_json(), str)
 
 
 @pytest.mark.parametrize(
@@ -67,6 +75,7 @@ def test_component_schema(component, schema_args, validate, json):
         (ShapeSchema, (1, 4, 4), (1, 3, 4), r'.*mismatch.*'),
         (NameSchema, 'foo', 'bar', r'.*name bar != foo.*'),
         (ArrayTypeSchema, np.ndarray, 'bar', r'.*array_type.*'),
+        # schema_args for ChunksSchema include [chunks, dims, shape]
         (ChunksSchema, {'x': 3}, (((2, 2),), ('x',), (4,)), r'.*(3).*'),
         (ChunksSchema, {'x': (2, 1)}, (((2, 2),), ('x',), (4,)), r'.*(2, 1).*'),
         (ChunksSchema, True, (None, ('x',), (4,)), r'.*expected array to be chunked.*'),
@@ -77,6 +86,7 @@ def test_component_schema(component, schema_args, validate, json):
             r'.*expected unchunked array but it is chunked*',
         ),
         (ChunksSchema, {'x': -1}, (((1, 2, 1),), ('x',), (4,)), r'.*did not match.*'),
+        (ChunksSchema, {'x': 2, 'y': -1}, (((2, 2), (5, 5)), ('x', 'y'), (4, 10)), r'.*(5).*'),
     ],
 )
 def test_component_raises_schema_error(component, schema_args, validate, match):
@@ -88,6 +98,12 @@ def test_component_raises_schema_error(component, schema_args, validate, match):
             schema.validate(validate)
 
 
+def test_chunks_schema_raises_for_invalid_chunks():
+    with pytest.raises(ValueError, match=r'.*int.*'):
+        schema = ChunksSchema(chunks=2)
+        schema.validate(((2, 2),), ('x',), (4,))
+
+
 def test_dataarray_empty_constructor():
 
     da = xr.DataArray(np.ones(4, dtype='i4'))
@@ -97,14 +113,32 @@ def test_dataarray_empty_constructor():
     da_schema.validate(da)
 
 
-def test_dataarray_validate_dtype():
+@pytest.mark.parametrize(
+    'kind, component, schema_args',
+    [
+        ('dtype', DTypeSchema, 'i4'),
+        ('dims', DimsSchema, ('x', None)),
+        ('shape', ShapeSchema, (2, None)),
+        ('name', NameSchema, 'foo'),
+        ('array_type', ArrayTypeSchema, np.ndarray),
+        ('chunks', ChunksSchema, False),
+    ],
+)
+def test_dataarray_component_constructors(kind, component, schema_args):
+    da = xr.DataArray(np.zeros((2, 4), dtype='i4'), dims=('x', 'y'), name='foo')
+    comp_schema = component(schema_args)
+    schema = DataArraySchema(**{kind: schema_args})
+    assert comp_schema.json == getattr(schema, kind).json
+    assert isinstance(getattr(schema, kind), component)
 
-    da = xr.DataArray(np.ones(4, dtype='i4'))
-    schema = DataArraySchema(dtype='i4')
     schema.validate(da)
 
-    component = schema.dtype
-    assert isinstance(component, DTypeSchema)
+
+def test_dataarray_schema_validate_raises_for_invalid_input_type():
+    ds = xr.Dataset()
+    schema = DataArraySchema()
+    with pytest.raises(ValueError, match='Input must be a xarray.DataArray'):
+        schema.validate(ds)
 
 
 def test_dataset_empty_constructor():
@@ -147,6 +181,10 @@ def test_checks_ds(ds):
     ds_schema = DatasetSchema(checks=[])
     ds_schema.validate(ds)
 
+    # TODO
+    # with pytest.raises(ValueError):
+    #     DatasetSchema(checks=[2])
+
 
 def test_checks_da(ds):
     da = ds['foo']
@@ -166,3 +204,6 @@ def test_checks_da(ds):
 
     schema = DataArraySchema(checks=[])
     schema.validate(da)
+
+    with pytest.raises(ValueError):
+        DataArraySchema(checks=[2])

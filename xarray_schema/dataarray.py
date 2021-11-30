@@ -180,13 +180,13 @@ class DataArraySchema(BaseSchema):
         if self.shape is not None:
             self.shape.validate(da.shape)
 
-        if self.coords is not None:
+        if self.coords is not None:  # pragma: no cover
             raise NotImplementedError('coords schema not implemented yet')
 
         if self.chunks is not None:
             self.chunks.validate(da.chunks, da.dims, da.shape)
 
-        if self.attrs:
+        if self.attrs:  # pragma: no cover
             raise NotImplementedError('attrs schema not implemented yet')
 
         if self.array_type is not None:

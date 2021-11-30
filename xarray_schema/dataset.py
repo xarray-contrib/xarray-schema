@@ -56,10 +56,10 @@ class DatasetSchema(BaseSchema):
                     else:
                         da_schema.validate(ds.data_vars[key])
 
-        if self.coords is not None:
+        if self.coords is not None:  # pragma: no cover
             raise NotImplementedError('coords schema not implemented yet')
 
-        if self.attrs:
+        if self.attrs:  # pragma: no cover
             raise NotImplementedError('attrs schema not implemented yet')
 
         if self.checks:
