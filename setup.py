@@ -31,6 +31,7 @@ setup(
     name='xarray-schema',
     description='Schema validation for Xarray objects',
     long_description=long_description,
+    long_description_content_type='text/markdown',
     python_requires='>=3.8',
     maintainer='Joe Hamman',
     maintainer_email='joe@carbonplan.org',
