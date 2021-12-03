@@ -13,7 +13,13 @@ Schema validation for Xarray
 
 # installation
 
-This package is in the early stages of development. Install it from source:
+Install xarray-schema from pypi:
+
+```shell
+pip install xarray-schema
+```
+
+Or install it from source:
 
 ```shell
 pip install git+git://github.com/carbonplan/xarray-schema
