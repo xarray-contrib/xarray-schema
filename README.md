@@ -1,7 +1,11 @@
-<img
-  src='https://carbonplan-assets.s3.amazonaws.com/monogram/dark-small.png'
-  height='48'
-/>
+<p align="left">
+  <a href="https://carbonplan.org/#gh-light-mode-only">
+    <img src="https://carbonplan-assets.s3.amazonaws.com/monogram/dark-small.png" height="48px" />
+  </a>
+  <a href="https://carbonplan.org/#gh-dark-mode-only">
+    <img src="https://carbonplan-assets.s3.amazonaws.com/monogram/light-small.png" height="48px" />
+  </a>
+</p>
 
 # xarray-schema
 
@@ -43,12 +47,39 @@ schema = DataArraySchema(dtype=np.integer, name='foo', shape=(4, ), dims=['x'])
 schema.validate(da)
 ```
 
-You can also use it to validate a Dataset like so:
+You can also use it to validate a `Dataset` like so:
 
 ```
 schema_ds = DatasetSchema({'foo': schema})
 
 schema_ds.validate(da.to_dataset())
+```
+
+Each component of the Xarray data model is implemented as a stand alone class:
+
+```python
+from xarray_schema.components import (
+    DTypeSchema,
+    DimsSchema,
+    ShapeSchema,
+    NameSchema,
+    ChunksSchema,
+    ArrayTypeSchema
+)
+
+# example constructions
+dtype_schema = DTypeSchema('i4')
+dims_schema = DimsSchema(('x', 'y', None))  # None is used as a wildcard
+shape_schema = ShapeSchema((5, 10, None))  # None is used as a wildcard
+name_schema = NameSchema('foo')
+chunk_schema = ChunkSchema({'x': None, 'y': -1})  # None is used as a wildcard, -1 is used as
+ArrayTypeSchema = ArrayTypeSchema(np.ndarray)
+
+# Example usage
+dtype_schama.validate(da.dtype)
+
+# Each object schema can be exported to JSON format
+dtype_json = dtype_schama.to_json()
 ```
 
 # roadmap
@@ -57,6 +88,7 @@ This is a very early prototype of a library. Some key things are missing:
 
 1. Validation of `coords` and `attrs`. These are implemented yet.
 1. Exceptions: Pandera accumulates schema exceptions and reports them all at once. Currently, we are a eagerly raising `SchemaErrors` when the are found.
+1. Roundtrip schemas to/from JSON and/or YAML format
 
 ## license
 
@@ -64,4 +96,4 @@ All the code in this repository is [MIT](https://choosealicense.com/licenses/mit
 
 ## about us
 
-CarbonPlan is a non-profit organization working on the science and data of carbon removal. We aim to improve the transparency and scientific integrity of carbon removal and climate solutions through open data and tools. Find out more at [carbonplan.org](https://carbonplan.org/) or get in touch by [opening an issue](https://github.com/carbonplan/xarray-schema/issues/new) or [sending us an email](mailto:hello@carbonplan.org).
+CarbonPlan is a non-profit organization that uses data and science for climate action. We aim to improve the transparency and scientific integrity of climate solutions through open data and tools. Find out more at [carbonplan.org](https://carbonplan.org/) or get in touch by [opening an issue](https://github.com/carbonplan/xarray-schema/issues/new) or [sending us an email](mailto:hello@carbonplan.org).
