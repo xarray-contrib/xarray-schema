@@ -15,7 +15,7 @@ Schema validation for Xarray
 [![codecov](https://codecov.io/gh/carbonplan/xarray-schema/branch/main/graph/badge.svg?token=EI729ZRFK0)](https://codecov.io/gh/carbonplan/xarray-schema)
 ![MIT License](https://badgen.net/badge/license/MIT/blue)
 
-# installation
+## installation
 
 Install xarray-schema from pypi:
 
@@ -29,7 +29,7 @@ Or install it from source:
 pip install git+git://github.com/carbonplan/xarray-schema
 ```
 
-# usage
+## usage
 
 Xarray-schema's API is modeled after [Pandera](https://pandera.readthedocs.io/en/stable/). The `DataArraySchema` and `DatasetSchema` objects both have `.validate()` methods.
 
@@ -82,7 +82,7 @@ dtype_schama.validate(da.dtype)
 dtype_json = dtype_schama.to_json()
 ```
 
-# roadmap
+## roadmap
 
 This is a very early prototype of a library. Some key things are missing:
 
