@@ -1,11 +1,12 @@
-from typing import Any, Callable, Dict, List, Union
+from typing import Any, Callable, Dict, List, Mapping, Union
 
 import numpy as np
 import xarray as xr
 
-from .base import BaseSchema
+from .base import BaseSchema, SchemaError
 from .components import (
     ArrayTypeSchema,
+    AttrsSchema,
     ChunksSchema,
     DimsSchema,
     DTypeSchema,
@@ -43,7 +44,9 @@ class DataArraySchema(BaseSchema):
     _shape: Union[ShapeSchema, None]
     _dims: Union[DimsSchema, None]
     _name: Union[NameSchema, None]
+    _coords: Union[Any, None]
     _chunks: Union[ChunksSchema, None]
+    _attrs: Union[AttrsSchema, None]
     _array_type: Union[ArrayTypeSchema, None]
 
     def __init__(
@@ -55,7 +58,7 @@ class DataArraySchema(BaseSchema):
         coords: Dict[str, Any] = None,
         chunks: Union[ChunksT, ChunksSchema] = None,
         array_type: Any = None,
-        attrs: Dict[str, Any] = None,
+        attrs: Mapping[str, Any] = None,
         checks: List[Callable] = None,
     ) -> None:
 
@@ -136,6 +139,28 @@ class DataArraySchema(BaseSchema):
             self._array_type = ArrayTypeSchema(value)
 
     @property
+    def attrs(self) -> AttrsSchema:
+        return self._attrs
+
+    @attrs.setter
+    def attrs(self, value):
+        if value is None or isinstance(value, AttrsSchema):
+            self._attrs = value
+        else:
+            self._attrs = AttrsSchema(value)
+
+    @property
+    def coords(self) -> Mapping:
+        return self._coords
+
+    @coords.setter
+    def coords(self, value):
+        if value is None or isinstance(value, CoordsSchema):
+            self._coords = value
+        else:
+            self._coords = CoordsSchema(value)
+
+    @property
     def checks(self) -> List[Callable]:
         return self._checks
 
@@ -180,14 +205,14 @@ class DataArraySchema(BaseSchema):
         if self.shape is not None:
             self.shape.validate(da.shape)
 
-        if self.coords is not None:  # pragma: no cover
-            raise NotImplementedError('coords schema not implemented yet')
+        if self.coords is not None:
+            self.coords.validate(da.coords)
 
         if self.chunks is not None:
             self.chunks.validate(da.chunks, da.dims, da.shape)
 
-        if self.attrs:  # pragma: no cover
-            raise NotImplementedError('attrs schema not implemented yet')
+        if self.attrs:
+            self.attrs.validate(da.attrs)
 
         if self.array_type is not None:
             self.array_type.validate(da.data)
@@ -204,3 +229,47 @@ class DataArraySchema(BaseSchema):
             except AttributeError:
                 pass
         return obj
+
+
+class CoordsSchema(BaseSchema):
+
+    _json_schema = {'type': 'string'}
+
+    def __init__(
+        self,
+        coords: Mapping[str, Any],
+        require_all_keys: bool = True,
+        allow_extra_keys: bool = True,
+    ) -> None:
+        self.coords = coords
+        self.require_all_keys = require_all_keys
+        self.allow_extra_keys = allow_extra_keys
+
+    def validate(self, coords: Any) -> None:
+        '''Validate coords
+
+        Parameters
+        ----------
+        coords : dict_like
+            coords of the DataArray. `None` may be used as a wildcard value.
+        '''
+
+        if self.require_all_keys:
+            missing_keys = set(self.coords) - set(coords)
+            if missing_keys:
+                raise SchemaError(f'coords has missing keys: {missing_keys}')
+
+        if not self.allow_extra_keys:
+            extra_keys = set(coords) - set(self.coords)
+            if extra_keys:
+                raise SchemaError(f'coords has extra keys: {extra_keys}')
+
+        for key, da_schema in self.coords.items():
+            if key not in coords:
+                raise SchemaError(f'key {key} not in coords')
+            else:
+                da_schema.validate(coords[key])
+
+    @property
+    def json(self) -> dict:
+        return {k: v.json for k, v in self.attrs.items()}

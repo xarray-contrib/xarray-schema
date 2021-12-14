@@ -1,7 +1,8 @@
 from collections.abc import Iterable
-from typing import Any, Dict, Hashable, Optional, Tuple, Union
+from typing import Any, Dict, Hashable, Mapping, Optional, Tuple, Union
 
 import numpy as np
+import numpy.typing as npt
 
 from .base import BaseSchema, SchemaError
 from .types import ChunksT, DimsT, ShapeT
@@ -11,13 +12,13 @@ class DTypeSchema(BaseSchema):
 
     _json_schema = {'type': 'string'}
 
-    def __init__(self, dtype: np.typing.DTypeLike) -> None:
+    def __init__(self, dtype: npt.DTypeLike) -> None:
         if dtype in [np.floating, np.integer, np.signedinteger, np.unsignedinteger, np.generic]:
             self.dtype = dtype
         else:
             self.dtype = np.dtype(dtype)
 
-    def validate(self, dtype: np.typing.DTypeLike) -> None:
+    def validate(self, dtype: npt.DTypeLike) -> None:
         '''Validate dtype
 
         Parameters
@@ -201,3 +202,67 @@ class ArrayTypeSchema(BaseSchema):
     @property
     def json(self) -> str:
         return str(self.array_type)
+
+
+class AttrSchema(BaseSchema):
+
+    _json_schema = {'type': 'object'}  # TODO: add type/value here
+
+    def __init__(self, type: Any = None, value: Any = None):
+        self.type = type
+        self.value = value
+
+    def validate(self, attr: Any):
+
+        if self.type is not None:
+            if not isinstance(attr, self.type):
+                SchemaError(f'attrs {attr} is not of type {self.type}')
+
+        if self.value is not None:
+            if self.value is not None and self.value != attr:
+                raise SchemaError(f'name {attr} != {self.value}')
+
+    @property
+    def json(self) -> str:
+        return {'type': self.type, 'value': self.value}
+
+
+class AttrsSchema(BaseSchema):
+
+    _json_schema = {'type': 'string'}
+
+    def __init__(
+        self, attrs: Mapping, require_all_keys: bool = True, allow_extra_keys: bool = True
+    ) -> None:
+        self.attrs = attrs
+        self.require_all_keys = require_all_keys
+        self.allow_extra_keys = allow_extra_keys
+
+    def validate(self, attrs: Any) -> None:
+        '''Validate attrs
+
+        Parameters
+        ----------
+        attrs : dict_like
+            attrs of the DataArray. `None` may be used as a wildcard value.
+        '''
+
+        if self.require_all_keys:
+            missing_keys = set(self.attrs) - set(attrs)
+            if missing_keys:
+                raise SchemaError(f'attrs has missing keys: {missing_keys}')
+
+        if not self.allow_extra_keys:
+            extra_keys = set(attrs) - set(self.attrs)
+            if extra_keys:
+                raise SchemaError(f'attrs has extra keys: {extra_keys}')
+
+        for key, attr_schema in self.attrs.items():
+            if key not in attrs:
+                raise SchemaError(f'key {key} not in attrs')
+            else:
+                attr_schema.validate(attrs[key])
+
+    @property
+    def json(self) -> dict:
+        return {k: v.json for k, v in self.attrs.items()}

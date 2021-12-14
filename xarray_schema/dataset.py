@@ -59,8 +59,8 @@ class DatasetSchema(BaseSchema):
         if self.coords is not None:  # pragma: no cover
             raise NotImplementedError('coords schema not implemented yet')
 
-        if self.attrs:  # pragma: no cover
-            raise NotImplementedError('attrs schema not implemented yet')
+        if self.attrs:
+            self.attrs.validate(ds.attrs)
 
         if self.checks:
             for check in self.checks:
@@ -68,7 +68,7 @@ class DatasetSchema(BaseSchema):
 
     @property
     def json(self):
-        obj = {'data_vars': {}}  # TODO: add when , 'coords': {}, 'attrs': {}}
+        obj = {'data_vars': {}, 'attrs': self.attrs.json if self.attrs is not None else None}
         if self.data_vars:
             for key, var in self.data_vars.items():
                 obj['data_vars'][key] = var.json

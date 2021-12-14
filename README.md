@@ -38,7 +38,7 @@ The basic usage is as follows:
 ```python
 import numpy as np
 import xarray as xr
-from xarray_schema import DataArraySchema, DatasetSchema
+from xarray_schema import DataArraySchema, DatasetSchema, CoordsSchema
 
 da = xr.DataArray(np.ones(4, dtype='i4'), dims=['x'], name='foo')
 
@@ -64,7 +64,9 @@ from xarray_schema.components import (
     ShapeSchema,
     NameSchema,
     ChunksSchema,
-    ArrayTypeSchema
+    ArrayTypeSchema,
+    AttrSchema,
+    AttrsSchema
 )
 
 # example constructions

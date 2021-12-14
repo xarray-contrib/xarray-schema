@@ -8,7 +8,7 @@ from .components import (  # noqa: F401
     NameSchema,
     ShapeSchema,
 )
-from .dataarray import DataArraySchema  # noqa: F401
+from .dataarray import CoordsSchema, DataArraySchema  # noqa: F401
 from .dataset import DatasetSchema  # noqa: F401
 
 try:

@@ -6,6 +6,8 @@ from xarray_schema import DataArraySchema, DatasetSchema
 from xarray_schema.base import SchemaError
 from xarray_schema.components import (
     ArrayTypeSchema,
+    AttrSchema,
+    AttrsSchema,
     ChunksSchema,
     DimsSchema,
     DTypeSchema,
@@ -52,6 +54,18 @@ def ds():
             [(((2, 2), (10,)), ('x', 'y'), (4, 10))],
             {'x': 2, 'y': -1},
         ),
+        (
+            AttrsSchema,
+            {'foo': AttrSchema(value='bar')},
+            [{'foo': 'bar'}],
+            {'foo': {'type': None, 'value': 'bar'}},
+        ),
+        (
+            AttrsSchema,
+            {'foo': AttrSchema(value=1)},
+            [{'foo': 1}],
+            {'foo': {'type': None, 'value': 1}},
+        ),
     ],
 )
 def test_component_schema(component, schema_args, validate, json):
@@ -63,6 +77,21 @@ def test_component_schema(component, schema_args, validate, json):
             schema.validate(v)
     assert schema.json == json
     assert isinstance(schema.to_json(), str)
+
+
+@pytest.mark.parametrize(
+    'type, value, validate, json',
+    [
+        (str, None, 'foo', {'type': str, 'value': None}),
+        (None, 'foo', 'foo', {'type': None, 'value': 'foo'}),
+        (str, 'foo', 'foo', {'type': str, 'value': 'foo'}),
+    ],
+)
+def test_attr_schema(type, value, validate, json):
+    schema = AttrSchema(type=type, value=value)
+    schema.validate(validate)
+    assert schema.json == json
+    # assert isinstance(schema.to_json(), str)
 
 
 @pytest.mark.parametrize(
