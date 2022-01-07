@@ -1,6 +1,4 @@
-from typing import Dict, Tuple, Union
-
-from numpy.typing import DTypeLike  # noqa: F401
+from typing import Dict, Iterable, Union
 
 DimsT = Tuple[Union[str, None]]
 ShapeT = Tuple[Union[int, None]]

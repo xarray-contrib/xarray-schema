@@ -231,10 +231,23 @@ class DataArraySchema(BaseSchema):
                 pass
         return obj
 
+    @classmethod
+    def from_json(cls, obj: dict):
+        return cls(obj)
+
 
 class CoordsSchema(BaseSchema):
 
-    _json_schema = {'type': 'string'}
+    _json_schema = {
+        'type': 'object',
+        'properties': {
+            'require_all_keys': {
+                'type': 'bool'
+            },  # Question: is this the same as JSON's additionalProperties?
+            'allow_extra_keys': {'type': 'bool'},
+            'coords': {'type': 'object'},
+        },
+    }
 
     def __init__(
         self,
@@ -245,6 +258,10 @@ class CoordsSchema(BaseSchema):
         self.coords = coords
         self.require_all_keys = require_all_keys
         self.allow_extra_keys = allow_extra_keys
+
+    @classmethod
+    def from_json(cls, obj: dict):
+        return cls(obj)
 
     def validate(self, coords: Any) -> None:
         '''Validate coords
@@ -273,4 +290,9 @@ class CoordsSchema(BaseSchema):
 
     @property
     def json(self) -> dict:
-        return {k: v.json for k, v in self.coords.items()}
+        obj = {
+            'require_all_keys': self.require_all_keys,
+            'allow_extra_keys': self.allow_extra_keys,
+            'coords': {k: v.json for k, v in self.coords.items()},
+        }
+        return obj

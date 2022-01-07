@@ -23,3 +23,8 @@ class BaseSchema:
 
     def to_json(self, **dumps_kws) -> str:
         return json.dumps(self.json, **dumps_kws)
+
+    @classmethod
+    @abstractmethod
+    def from_json(cls, obj):  # pragma: no cover
+        pass

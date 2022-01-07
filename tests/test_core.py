@@ -58,13 +58,21 @@ def ds():
             AttrsSchema,
             {'foo': AttrSchema(value='bar')},
             [{'foo': 'bar'}],
-            {'foo': {'type': None, 'value': 'bar'}},
+            {
+                'allow_extra_keys': True,
+                'require_all_keys': True,
+                'attrs': {'foo': {'type': None, 'value': 'bar'}},
+            },
         ),
         (
             AttrsSchema,
             {'foo': AttrSchema(value=1)},
             [{'foo': 1}],
-            {'foo': {'type': None, 'value': 1}},
+            {
+                'allow_extra_keys': True,
+                'require_all_keys': True,
+                'attrs': {'foo': {'type': None, 'value': 1}},
+            },
         ),
     ],
 )
@@ -77,6 +85,9 @@ def test_component_schema(component, schema_args, validate, json):
             schema.validate(v)
     assert schema.json == json
     assert isinstance(schema.to_json(), str)
+
+    # json roundtrip
+    component.from_json(schema.json).json == json
 
 
 @pytest.mark.parametrize(
