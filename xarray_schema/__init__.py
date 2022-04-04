@@ -1,5 +1,6 @@
 from pkg_resources import DistributionNotFound, get_distribution
 
+from .base import SchemaError  # noqa: F401
 from .components import (  # noqa: F401
     ArrayTypeSchema,
     ChunksSchema,
