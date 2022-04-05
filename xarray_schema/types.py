@@ -1,8 +1,7 @@
 from typing import Dict, Tuple, Union
 
-import numpy as np
+from numpy.typing import DTypeLike  # noqa: F401
 
-DTypeLike = np.typing.DTypeLike
 DimsT = Tuple[Union[str, None]]
 ShapeT = Tuple[Union[int, None]]
 ChunksT = Union[bool, Dict[str, Union[int, None]]]
