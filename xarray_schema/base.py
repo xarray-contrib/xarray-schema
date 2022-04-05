@@ -1,10 +1,6 @@
 import json
 from abc import abstractmethod
-from typing import Any, Dict, Hashable, Tuple, Union
-
-DimsT = Tuple[Union[Hashable, None]]
-ShapeT = Tuple[Union[int, None]]
-ChunksT = Union[bool, Dict[Hashable, Union[int, None]]]
+from typing import Any, Dict
 
 
 class SchemaError(Exception):

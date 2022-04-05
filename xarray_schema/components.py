@@ -1,24 +1,23 @@
 from collections.abc import Iterable
-from typing import Any, Dict, Hashable, Mapping, Optional, Tuple, Union
+from typing import Any, Dict, Hashable, Mapping, Tuple, Union
 
 import numpy as np
-import numpy.typing as npt
 
 from .base import BaseSchema, SchemaError
-from .types import ChunksT, DimsT, ShapeT
+from .types import ChunksT, DimsT, DTypeLike, ShapeT
 
 
 class DTypeSchema(BaseSchema):
 
     _json_schema = {'type': 'string'}
 
-    def __init__(self, dtype: npt.DTypeLike) -> None:
+    def __init__(self, dtype: DTypeLike) -> None:
         if dtype in [np.floating, np.integer, np.signedinteger, np.unsignedinteger, np.generic]:
             self.dtype = dtype
         else:
             self.dtype = np.dtype(dtype)
 
-    def validate(self, dtype: npt.DTypeLike) -> None:
+    def validate(self, dtype: DTypeLike) -> None:
         '''Validate dtype
 
         Parameters
@@ -127,9 +126,7 @@ class ChunksSchema(BaseSchema):
     def __init__(self, chunks: ChunksT) -> None:
         self.chunks = chunks
 
-    def validate(
-        self, chunks: Optional[Tuple[Tuple[int, ...], ...]], dims: tuple, shape: tuple
-    ) -> None:
+    def validate(self, chunks: Tuple[Tuple[int, ...], ...], dims: tuple, shape: tuple) -> None:
         '''Validate chunks
 
         Parameters

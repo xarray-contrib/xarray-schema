@@ -1,6 +1,5 @@
 from typing import Any, Callable, Dict, List, Mapping, Union
 
-import numpy as np
 import xarray as xr
 
 from .base import BaseSchema, SchemaError
@@ -13,7 +12,7 @@ from .components import (
     NameSchema,
     ShapeSchema,
 )
-from .types import ChunksT, DimsT, ShapeT
+from .types import ChunksT, DimsT, DTypeLike, ShapeT
 
 
 class DataArraySchema(BaseSchema):
@@ -21,7 +20,7 @@ class DataArraySchema(BaseSchema):
 
     Parameters
     ----------
-    dtype : np.typing.DTypeLike or DTypeSchema, optional
+    dtype : DTypeLike or DTypeSchema, optional
         Datatype of the the variable. If a string is specified it must be a valid NumPy data type value, by default None
     shape : ShapeT or ShapeSchema, optional
         Shape of the DataArray. `None` may be used as a wildcard value. By default None
@@ -51,7 +50,7 @@ class DataArraySchema(BaseSchema):
 
     def __init__(
         self,
-        dtype: Union[np.typing.DTypeLike, DTypeSchema] = None,
+        dtype: Union[DTypeLike, DTypeSchema] = None,
         shape: Union[ShapeT, ShapeSchema] = None,
         dims: Union[DimsT, DimsSchema] = None,
         name: Union[str, NameSchema] = None,
@@ -77,7 +76,7 @@ class DataArraySchema(BaseSchema):
         return self._dtype
 
     @dtype.setter
-    def dtype(self, value: Union[DTypeSchema, np.typing.DTypeLike, None]):
+    def dtype(self, value: Union[DTypeSchema, DTypeLike, None]):
         if value is None or isinstance(value, DTypeSchema):
             self._dtype = value
         else:
