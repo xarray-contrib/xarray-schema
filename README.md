@@ -17,16 +17,22 @@ Schema validation for Xarray
 
 ## installation
 
-Install xarray-schema from pypi:
+Install xarray-schema from PyPI:
 
 ```shell
 pip install xarray-schema
 ```
 
+Conda:
+
+```shell
+conda install -c conda-forge xarray-schema
+```
+
 Or install it from source:
 
 ```shell
-pip install git+git://github.com/carbonplan/xarray-schema
+pip install git+https://github.com/carbonplan/xarray-schema
 ```
 
 ## usage
@@ -88,9 +94,9 @@ dtype_json = dtype_schama.to_json()
 
 This is a very early prototype of a library. Some key things are missing:
 
-1. Validation of `coords` and `attrs`. These are implemented yet.
+1. Validation of `coords` and `attrs`. These are not implemented yet.
 1. Exceptions: Pandera accumulates schema exceptions and reports them all at once. Currently, we are a eagerly raising `SchemaErrors` when the are found.
-1. Roundtrip schemas to/from JSON and/or YAML format
+1. Roundtrip schemas to/from JSON and/or YAML format.
 
 ## license
 
