@@ -65,7 +65,7 @@ jobs:
         if: github.event_name == 'push'
         run: |
           python -m pip install --upgrade pip
-          python -m pip install dist/xarray-schema*.whl
+          python -m pip install dist/xarray_schema*.whl
           python -c "import xarray-schema; print(xarray-schema.__version__)"
 
   upload-to-pypi:
