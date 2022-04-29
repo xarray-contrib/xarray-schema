@@ -1,4 +1,9 @@
 repos:
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v0.902
+    hooks:
+      - id: mypy
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.2.0
     hooks:
@@ -28,8 +33,8 @@ repos:
     hooks:
       - id: isort
 
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v2.6.2
-    hooks:
-      - id: prettier
-        language_version: system
+#  - repo: https://github.com/pre-commit/mirrors-prettier
+#    rev: v2.6.2
+#    hooks:
+#      - id: prettier
+#        language_version: system
