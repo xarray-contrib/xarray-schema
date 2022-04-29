@@ -1,4 +1,6 @@
 dask
 pytest
 pytest-cov
+mypy==0.950
+types-setuptools==57.4.14
 -r requirements.txt
