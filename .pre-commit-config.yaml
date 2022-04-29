@@ -4,8 +4,8 @@ repos:
       - id: mypy
         name: mypy
         language: system
-        stages: [ commit ]
-        entry:  invoke mypy
+        stages: [commit]
+        entry: invoke mypy
         pass_filenames: false
         files: '[^_].*\.py$'
 
