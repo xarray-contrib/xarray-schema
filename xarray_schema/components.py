@@ -127,7 +127,7 @@ class ChunksSchema(BaseSchema):
         self.chunks = chunks
 
     def validate(
-        self, chunks: Optional[Tuple[Tuple[int, ...], ...]], dims: tuple, shape: tuple[int, ...]
+        self, chunks: Optional[Tuple[Tuple[int, ...], ...]], dims: Tuple, shape: Tuple[int, ...]
     ) -> None:
         '''Validate chunks
 
