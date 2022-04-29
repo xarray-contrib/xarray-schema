@@ -3,6 +3,7 @@ from typing import Any, Callable, Dict, Hashable, Iterable, Union
 import xarray as xr
 
 from .base import BaseSchema, SchemaError
+from .components import AttrSchema
 from .dataarray import DataArraySchema
 
 
@@ -27,7 +28,7 @@ class DatasetSchema(BaseSchema):
 
         self.data_vars = data_vars
         self.coords = coords
-        self.attrs = attrs
+        self.attrs = AttrSchema(attrs)
         self.checks = checks
 
     def validate(self, ds: xr.Dataset) -> None:
