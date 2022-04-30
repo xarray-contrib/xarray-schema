@@ -1,9 +1,9 @@
-from invoke import task  # pragma: no cover
+from invoke import task
 
-SRC_DIR = 'xarray_schema'  # pragma: no cover
-TEST_DIR = 'tests'  # pragma: no cover
+SRC_DIR = 'xarray_schema'
+TEST_DIR = 'tests'
 
 
 @task
-def mypy(c):  # pragma: no cover
+def mypy(c):
     c.run(f'mypy {SRC_DIR} {TEST_DIR}')
