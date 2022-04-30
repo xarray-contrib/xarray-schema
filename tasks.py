@@ -5,5 +5,5 @@ TEST_DIR = 'tests'
 
 
 @task
-def mypy(c):
+def mypy(c):  # pragma: no cover
     c.run(f'mypy {SRC_DIR} {TEST_DIR}')
