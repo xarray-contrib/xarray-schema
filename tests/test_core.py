@@ -107,6 +107,7 @@ def test_attr_schema(type, value, validate, json):
         # schema_args for ChunksSchema include [chunks, dims, shape]
         (ChunksSchema, {'x': 3}, (((2, 2),), ('x',), (4,)), r'.*(3).*'),
         (ChunksSchema, {'x': (2, 1)}, (((2, 2),), ('x',), (4,)), r'.*(2, 1).*'),
+        (ChunksSchema, {'x': (2, 1)}, (None, ('x',), (4,)), r'.*expected array to be chunked.*'),
         (ChunksSchema, True, (None, ('x',), (4,)), r'.*expected array to be chunked.*'),
         (
             ChunksSchema,

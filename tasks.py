@@ -1,7 +1,7 @@
-from invoke import task
+from invoke import task  # pragma: no cover
 
-SRC_DIR = 'xarray_schema'
-TEST_DIR = 'tests'
+SRC_DIR = 'xarray_schema'  # pragma: no cover
+TEST_DIR = 'tests'  # pragma: no cover
 
 
 @task
