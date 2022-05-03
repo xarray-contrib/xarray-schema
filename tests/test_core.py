@@ -218,6 +218,19 @@ def test_checks_ds(ds):
     #     DatasetSchema(checks=[2])
 
 
+def test_dataset_with_attrs_schema():
+    name = 'name'
+    expected_value = 'expected_value'
+    actual_value = 'actual_value'
+    ds = xr.Dataset(attrs={name: actual_value})
+    ds_schema = DatasetSchema(attrs={name: AttrSchema(value=expected_value)})
+    ds_schema_2 = DatasetSchema(attrs=AttrsSchema({name: AttrSchema(value=expected_value)}))
+    with pytest.raises(SchemaError):
+        ds_schema.validate(ds)
+    with pytest.raises(SchemaError):
+        ds_schema_2.validate(ds)
+
+
 def test_checks_da(ds):
     da = ds['foo']
 

@@ -233,7 +233,10 @@ class AttrsSchema(BaseSchema):
     _json_schema = {'type': 'string'}
 
     def __init__(
-        self, attrs: Mapping, require_all_keys: bool = True, allow_extra_keys: bool = True
+        self,
+        attrs: Mapping[Hashable, AttrSchema],
+        require_all_keys: bool = True,
+        allow_extra_keys: bool = True,
     ) -> None:
         self.attrs = attrs
         self.require_all_keys = require_all_keys
