@@ -231,6 +231,40 @@ def test_dataset_with_attrs_schema():
         ds_schema_2.validate(ds)
 
 
+def test_attrs_extra_key():
+    name = 'name'
+    value = 'value_2'
+    name_2 = 'name_2'
+    value_2 = 'value_2'
+    ds = xr.Dataset(attrs={name: value})
+    ds_schema = DatasetSchema(
+        attrs=AttrsSchema(
+            attrs={
+                name: AttrSchema(
+                    value=value,
+                ),
+                name_2: AttrSchema(value=value_2),
+            },
+            require_all_keys=True,
+        )
+    )
+    with pytest.raises(SchemaError):
+        ds_schema.validate(ds)
+
+
+def test_attrs_missing_key():
+    name = 'name'
+    value = 'value_2'
+    name_2 = 'name_2'
+    value_2 = 'value_2'
+    ds = xr.Dataset(attrs={name: value, name_2: value_2})
+    ds_schema = DatasetSchema(
+        attrs=AttrsSchema(attrs={name: AttrSchema(value=value)}, allow_extra_keys=False)
+    )
+    with pytest.raises(SchemaError):
+        ds_schema.validate(ds)
+
+
 def test_checks_da(ds):
     da = ds['foo']
 
