@@ -32,6 +32,8 @@ jobs:
           python -m pip install -r dev-requirements.txt
           python -m pip install --no-deps -e .
           python -m pip list
+      - name: Type check with mypy
+        run: invoke mypy
       - name: Running Tests
         run: |
           python -m pytest --cov=./ --cov-report=xml --verbose
