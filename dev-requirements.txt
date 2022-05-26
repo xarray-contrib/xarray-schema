@@ -1,7 +1,7 @@
 dask
 pytest
 pytest-cov
-mypy==0.950
+mypy==0.960
 invoke==1.7.1
 types-setuptools==57.4.15
 -r requirements.txt
