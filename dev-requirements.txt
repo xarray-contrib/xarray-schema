@@ -3,5 +3,5 @@ pytest
 pytest-cov
 mypy==0.960
 invoke==1.7.1
-types-setuptools==57.4.16
+types-setuptools==57.4.17
 -r requirements.txt
