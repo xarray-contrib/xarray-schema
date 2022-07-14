@@ -233,7 +233,7 @@ class DataArraySchema(BaseSchema):
 
     @classmethod
     def from_json(cls, obj: dict):
-        return cls(obj)
+        return cls(**obj)
 
 
 class CoordsSchema(BaseSchema):

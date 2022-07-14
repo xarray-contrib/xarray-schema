@@ -215,6 +215,7 @@ class ArrayTypeSchema(BaseSchema):
 
     @classmethod
     def from_json(cls, obj: str):
+        array_type: Any  # TODO: figure out how to optionally include the dask array type
 
         if obj == "<class 'dask.array.core.Array'>":
             import dask.array as da
