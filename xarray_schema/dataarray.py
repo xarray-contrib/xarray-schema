@@ -1,6 +1,7 @@
-from typing import Any, Callable, Dict, List, Mapping, Union
+from __future__ import annotations
 
-import numpy as np
+from typing import Any, Callable, Dict, List, Mapping, Optional, Union
+
 import xarray as xr
 
 from .base import BaseSchema, SchemaError
@@ -13,7 +14,7 @@ from .components import (
     NameSchema,
     ShapeSchema,
 )
-from .types import ChunksT, DimsT, ShapeT
+from .types import ChunksT, DimsT, DTypeLike, ShapeT
 
 
 class DataArraySchema(BaseSchema):
@@ -21,7 +22,7 @@ class DataArraySchema(BaseSchema):
 
     Parameters
     ----------
-    dtype : np.typing.DTypeLike or DTypeSchema, optional
+    dtype : DTypeLike or DTypeSchema, optional
         Datatype of the the variable. If a string is specified it must be a valid NumPy data type value, by default None
     shape : ShapeT or ShapeSchema, optional
         Shape of the DataArray. `None` may be used as a wildcard value. By default None
@@ -51,7 +52,7 @@ class DataArraySchema(BaseSchema):
 
     def __init__(
         self,
-        dtype: Union[np.typing.DTypeLike, DTypeSchema] = None,
+        dtype: Union[DTypeLike, DTypeSchema] = None,
         shape: Union[ShapeT, ShapeSchema] = None,
         dims: Union[DimsT, DimsSchema] = None,
         name: Union[str, NameSchema] = None,
@@ -61,23 +62,23 @@ class DataArraySchema(BaseSchema):
         attrs: Mapping[str, Any] = None,
         checks: List[Callable] = None,
     ) -> None:
-
-        self.dtype = dtype
-        self.shape = shape
-        self.dims = dims
-        self.name = name
-        self.coords = coords
-        self.chunks = chunks
-        self.attrs = attrs
-        self.array_type = array_type
-        self.checks = checks
+        # see https://github.com/python/mypy/issues/3004
+        self.dtype = dtype  # type: ignore
+        self.shape = shape  # type: ignore
+        self.dims = dims  # type: ignore
+        self.name = name  # type: ignore
+        self.coords = coords  # type: ignore
+        self.chunks = chunks  # type: ignore
+        self.attrs = attrs  # type: ignore
+        self.array_type = array_type  # type: ignore
+        self.checks = checks  # type: ignore
 
     @property
     def dtype(self) -> Union[DTypeSchema, None]:
         return self._dtype
 
     @dtype.setter
-    def dtype(self, value: Union[DTypeSchema, np.typing.DTypeLike, None]):
+    def dtype(self, value: Union[DTypeSchema, DTypeLike, None]):
         if value is None or isinstance(value, DTypeSchema):
             self._dtype = value
         else:
@@ -95,7 +96,7 @@ class DataArraySchema(BaseSchema):
             self._dims = DimsSchema(value)
 
     @property
-    def shape(self) -> ShapeSchema:
+    def shape(self) -> Optional[ShapeSchema]:
         return self._shape
 
     @shape.setter
@@ -106,7 +107,7 @@ class DataArraySchema(BaseSchema):
             self._shape = ShapeSchema(value)
 
     @property
-    def chunks(self) -> ChunksSchema:
+    def chunks(self) -> Optional[ChunksSchema]:
         return self._chunks
 
     @chunks.setter
@@ -117,7 +118,7 @@ class DataArraySchema(BaseSchema):
             self._chunks = ChunksSchema(value)
 
     @property
-    def name(self) -> NameSchema:
+    def name(self) -> Optional[NameSchema]:
         return self._name
 
     @name.setter
@@ -128,7 +129,7 @@ class DataArraySchema(BaseSchema):
             self._name = NameSchema(value)
 
     @property
-    def array_type(self) -> ArrayTypeSchema:
+    def array_type(self) -> Optional[ArrayTypeSchema]:
         return self._array_type
 
     @array_type.setter
@@ -139,7 +140,7 @@ class DataArraySchema(BaseSchema):
             self._array_type = ArrayTypeSchema(value)
 
     @property
-    def attrs(self) -> AttrsSchema:
+    def attrs(self) -> Optional[AttrsSchema]:
         return self._attrs
 
     @attrs.setter
@@ -150,7 +151,7 @@ class DataArraySchema(BaseSchema):
             self._attrs = AttrsSchema(value)
 
     @property
-    def coords(self) -> Mapping:
+    def coords(self) -> Optional[CoordsSchema]:
         return self._coords
 
     @coords.setter
@@ -272,4 +273,4 @@ class CoordsSchema(BaseSchema):
 
     @property
     def json(self) -> dict:
-        return {k: v.json for k, v in self.attrs.items()}
+        return {k: v.json for k, v in self.coords.items()}

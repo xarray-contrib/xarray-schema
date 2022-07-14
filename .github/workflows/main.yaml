@@ -18,11 +18,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Setup Python
-        uses: actions/setup-python@v2.3.2
+        uses: actions/setup-python@v4.1.0
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
-      - uses: actions/cache@v3.0.1
+      - uses: actions/cache@v3.0.5
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/dev-requirements.txt') }}
@@ -32,11 +32,13 @@ jobs:
           python -m pip install -r dev-requirements.txt
           python -m pip install --no-deps -e .
           python -m pip list
+      - name: Type check with mypy
+        run: invoke mypy
       - name: Running Tests
         run: |
           python -m pytest --cov=./ --cov-report=xml --verbose
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2.1.0
+        uses: codecov/codecov-action@v3
         if: ${{ matrix.python-version }} == 3.9
         with:
           file: ./coverage.xml
@@ -51,11 +53,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Setup Python
-        uses: actions/setup-python@v2.3.2
+        uses: actions/setup-python@v4.1.0
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
-      - uses: actions/cache@v3.0.1
+      - uses: actions/cache@v3.0.5
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/dev-requirements.txt') }}

@@ -3,6 +3,7 @@ from typing import Any, Callable, Dict, Hashable, Iterable, Union
 import xarray as xr
 
 from .base import BaseSchema, SchemaError
+from .components import AttrSchema, AttrsSchema
 from .dataarray import DataArraySchema
 
 
@@ -21,13 +22,13 @@ class DatasetSchema(BaseSchema):
         self,
         data_vars: Dict[Hashable, Union[DataArraySchema, None]] = None,
         coords: Dict[Hashable, Any] = None,
-        attrs: Dict[Hashable, Any] = None,
+        attrs: Union[AttrsSchema, Dict[Hashable, AttrSchema], None] = None,
         checks: Iterable[Callable] = None,
     ) -> None:
 
         self.data_vars = data_vars
         self.coords = coords
-        self.attrs = attrs
+        self.attrs = attrs  # type: ignore
         self.checks = checks
 
     def validate(self, ds: xr.Dataset) -> None:
@@ -65,6 +66,17 @@ class DatasetSchema(BaseSchema):
         if self.checks:
             for check in self.checks:
                 check(ds)
+
+    @property
+    def attrs(self) -> Union[AttrsSchema, None]:
+        return self._attrs
+
+    @attrs.setter
+    def attrs(self, value: Union[AttrsSchema, Dict[Hashable, Any], None]):
+        if value is None or isinstance(value, AttrsSchema):
+            self._attrs = value
+        else:
+            self._attrs = AttrsSchema(value)
 
     @property
     def json(self):

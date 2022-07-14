@@ -5,20 +5,20 @@ import numpy as np
 import numpy.typing as npt
 
 from .base import BaseSchema, SchemaError
-from .types import ChunksT, DimsT, ShapeT
+from .types import ChunksT, DimsT, DTypeLike, ShapeT
 
 
 class DTypeSchema(BaseSchema):
 
     _json_schema = {'type': 'string'}
 
-    def __init__(self, dtype: npt.DTypeLike) -> None:
+    def __init__(self, dtype: DTypeLike) -> None:
         if dtype in [np.floating, np.integer, np.signedinteger, np.unsignedinteger, np.generic]:
             self.dtype = dtype
         else:
             self.dtype = np.dtype(dtype)
 
-    def validate(self, dtype: npt.DTypeLike) -> None:
+    def validate(self, dtype: DTypeLike) -> None:
         '''Validate dtype
 
         Parameters
@@ -128,7 +128,7 @@ class ChunksSchema(BaseSchema):
         self.chunks = chunks
 
     def validate(
-        self, chunks: Optional[Tuple[Tuple[int, ...], ...]], dims: tuple, shape: tuple
+        self, chunks: Optional[Tuple[Tuple[int, ...], ...]], dims: Tuple, shape: Tuple[int, ...]
     ) -> None:
         '''Validate chunks
 
@@ -148,6 +148,8 @@ class ChunksSchema(BaseSchema):
             elif not self.chunks and chunks:
                 raise SchemaError('expected unchunked array but it is chunked')
         elif isinstance(self.chunks, dict):
+            if chunks is None:
+                raise SchemaError('expected array to be chunked but it is not')
             dim_chunks = dict(zip(dims, chunks))
             dim_sizes = dict(zip(dims, shape))
             # check whether chunk sizes are regular because we assume the first chunk to be representative below
@@ -223,7 +225,7 @@ class AttrSchema(BaseSchema):
                 raise SchemaError(f'name {attr} != {self.value}')
 
     @property
-    def json(self) -> str:
+    def json(self) -> dict:
         return {'type': self.type, 'value': self.value}
 
 
@@ -232,7 +234,10 @@ class AttrsSchema(BaseSchema):
     _json_schema = {'type': 'string'}
 
     def __init__(
-        self, attrs: Mapping, require_all_keys: bool = True, allow_extra_keys: bool = True
+        self,
+        attrs: Mapping[Hashable, AttrSchema],
+        require_all_keys: bool = True,
+        allow_extra_keys: bool = True,
     ) -> None:
         self.attrs = attrs
         self.require_all_keys = require_all_keys
