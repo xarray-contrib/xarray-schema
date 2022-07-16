@@ -78,7 +78,7 @@ class DimsSchema(BaseSchema):
 
 class ShapeSchema(BaseSchema):
 
-    _json_schema = {'type': 'array', 'prefixItems': [{'type': 'number'}, {'type': 'string'}]}
+    _json_schema = {'type': 'array'}
 
     def __init__(self, shape: ShapeT) -> None:
         self.shape = shape
