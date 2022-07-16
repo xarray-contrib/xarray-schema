@@ -1,3 +1,5 @@
+import dask.array
+import jsonschema
 import numpy as np
 import pytest
 import xarray as xr
@@ -40,6 +42,12 @@ def ds():
         (ShapeSchema, (1, 2, 3), [(1, 2, 3)], [1, 2, 3]),
         (NameSchema, 'foo', ['foo'], 'foo'),
         (ArrayTypeSchema, np.ndarray, [np.array([1, 2, 3])], "<class 'numpy.ndarray'>"),
+        (
+            ArrayTypeSchema,
+            dask.array.Array,
+            [dask.array.zeros(4)],
+            "<class 'dask.array.core.Array'>",
+        ),
         # schema_args for ChunksSchema include [chunks, dims, shape]
         (ChunksSchema, True, [(((1, 1),), ('x',), (2,))], True),
         (ChunksSchema, {'x': 2}, [(((2, 2),), ('x',), (4,))], {'x': 2}),
@@ -85,6 +93,9 @@ def test_component_schema(component, schema_args, validate, json):
             schema.validate(v)
     assert schema.json == json
     assert isinstance(schema.to_json(), str)
+
+    # validate schema
+    jsonschema.validate(schema.json, schema._json_schema)
 
     # json roundtrip
     component.from_json(schema.json).json == json

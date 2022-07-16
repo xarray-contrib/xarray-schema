@@ -42,7 +42,7 @@ class DTypeSchema(BaseSchema):
             return self.dtype.str
         else:
             # fallbacks
-            return getattr(self.dtype, '__name__', str(self.dtype))
+            return str(getattr(self.dtype, '__name__', str(self.dtype)))
 
 
 class DimsSchema(BaseSchema):
@@ -78,7 +78,7 @@ class DimsSchema(BaseSchema):
 
 class ShapeSchema(BaseSchema):
 
-    _json_schema = {'type': 'array', 'items': {'type': ['int', 'null']}}
+    _json_schema = {'type': 'array', 'prefixItems': [{'type': 'number'}, {'type': 'string'}]}
 
     def __init__(self, shape: ShapeT) -> None:
         self.shape = shape
@@ -141,7 +141,7 @@ class NameSchema(BaseSchema):
 
 class ChunksSchema(BaseSchema):
 
-    _json_schema = {'type': 'object'}  # TODO: fill this in with patternProperties
+    _json_schema = {'type': ['boolean', 'object']}
 
     def __init__(self, chunks: ChunksT) -> None:
         self.chunks = chunks
@@ -276,9 +276,9 @@ class AttrsSchema(BaseSchema):
         'type': 'object',
         'properties': {
             'require_all_keys': {
-                'type': 'bool'
+                'type': 'boolean'
             },  # Question: is this the same as JSON's additionalProperties?
-            'allow_extra_keys': {'type': 'bool'},
+            'allow_extra_keys': {'type': 'boolean'},
             'attrs': {'type': 'object'},
         },
     }
