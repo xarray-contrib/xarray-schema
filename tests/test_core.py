@@ -163,6 +163,7 @@ def test_dataarray_empty_constructor():
     da = xr.DataArray(np.ones(4, dtype='i4'))
     da_schema = DataArraySchema()
     assert hasattr(da_schema, 'validate')
+    jsonschema.validate(da_schema.json, da_schema._json_schema)
     assert da_schema.json == {}
     da_schema.validate(da)
 
@@ -183,6 +184,7 @@ def test_dataarray_component_constructors(kind, component, schema_args):
     comp_schema = component(schema_args)
     schema = DataArraySchema(**{kind: schema_args})
     assert comp_schema.json == getattr(schema, kind).json
+    jsonschema.validate(schema.json, schema._json_schema)
     assert isinstance(getattr(schema, kind), component)
 
     schema.validate(da)
@@ -198,6 +200,9 @@ def test_dataarray_schema_validate_raises_for_invalid_input_type():
 def test_dataset_empty_constructor():
     ds_schema = DatasetSchema()
     assert hasattr(ds_schema, 'validate')
+    print(ds_schema.json)
+    print(ds_schema._json_schema)
+    jsonschema.validate(ds_schema.json, ds_schema._json_schema)
     ds_schema.json == {}
 
 
@@ -209,6 +214,9 @@ def test_dataset_example(ds):
             'bar': DataArraySchema(name='bar', dtype=np.floating, dims=['x', 'y']),
         }
     )
+
+    jsonschema.validate(ds_schema.json, ds_schema._json_schema)
+
     assert list(ds_schema.json['data_vars'].keys()) == ['foo', 'bar']
     ds_schema.validate(ds)
 
@@ -246,7 +254,10 @@ def test_dataset_with_attrs_schema():
     actual_value = 'actual_value'
     ds = xr.Dataset(attrs={name: actual_value})
     ds_schema = DatasetSchema(attrs={name: AttrSchema(value=expected_value)})
+    jsonschema.validate(ds_schema.json, ds_schema._json_schema)
+
     ds_schema_2 = DatasetSchema(attrs=AttrsSchema({name: AttrSchema(value=expected_value)}))
+    jsonschema.validate(ds_schema_2.json, ds_schema_2._json_schema)
     with pytest.raises(SchemaError):
         ds_schema.validate(ds)
     with pytest.raises(SchemaError):
@@ -270,6 +281,8 @@ def test_attrs_extra_key():
             require_all_keys=True,
         )
     )
+    jsonschema.validate(ds_schema.json, ds_schema._json_schema)
+
     with pytest.raises(SchemaError):
         ds_schema.validate(ds)
 

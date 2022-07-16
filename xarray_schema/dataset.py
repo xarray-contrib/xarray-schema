@@ -93,7 +93,7 @@ class DatasetSchema(BaseSchema):
 
     @property
     def json(self):
-        obj = {'data_vars': {}, 'attrs': self.attrs.json if self.attrs is not None else None}
+        obj = {'data_vars': {}, 'attrs': self.attrs.json if self.attrs is not None else {}}
         if self.data_vars:
             for key, var in self.data_vars.items():
                 obj['data_vars'][key] = var.json

@@ -39,6 +39,7 @@ class DataArraySchema(BaseSchema):
         List of callables that take and return a DataArray, by default None
     '''
 
+    _json_schema = {'type': 'object'}
     _schema_slots = ['dtype', 'dims', 'shape', 'coords', 'name', 'chunks', 'attrs', 'array_type']
 
     _dtype: Union[DTypeSchema, None]
