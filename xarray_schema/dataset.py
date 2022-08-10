@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Hashable, Iterable, Union
+from typing import Any, Callable, Dict, Hashable, Iterable, Optional, Union
 
 import xarray as xr
 
@@ -29,14 +29,14 @@ class DatasetSchema(BaseSchema):
 
     def __init__(
         self,
-        data_vars: Dict[Hashable, Union[DataArraySchema, None]] = None,
-        coords: Dict[Hashable, Any] = None,
+        data_vars: Optional[Dict[Hashable, Optional[DataArraySchema]]] = None,
+        coords: Union[CoordsSchema, Dict[Hashable, DataArraySchema], None] = None,
         attrs: Union[AttrsSchema, Dict[Hashable, AttrSchema], None] = None,
         checks: Iterable[Callable] = None,
     ) -> None:
 
-        self.data_vars = data_vars
-        self.coords = coords
+        self.data_vars = data_vars  # type: ignore
+        self.coords = coords  # type: ignore
         self.attrs = attrs  # type: ignore
         self.checks = checks
 
@@ -102,21 +102,20 @@ class DatasetSchema(BaseSchema):
             self._attrs = AttrsSchema(value)
 
     @property
-    def data_vars(self) -> Dict[Hashable, Union[DataArraySchema, None]]:
-        return self._data_vars
+    def data_vars(self) -> Optional[Dict[Hashable, Optional[DataArraySchema]]]:
+        return self._data_vars  # type: ignore
 
     @data_vars.setter
-    def data_vars(self, value: Union[Dict[Hashable, Union[DataArraySchema, None]], None]):
+    def data_vars(self, value: Optional[Dict[Hashable, Optional[DataArraySchema]]]):
         if isinstance(value, dict):
             self._data_vars = {}
             for k, v in value.items():
                 if isinstance(v, DataArraySchema):
                     self._data_vars[k] = v
                 else:
-                    self._data_vars[k] = DataArraySchema(**v)
+                    self._data_vars[k] = DataArraySchema(**v)  # type: ignore
         else:
-
-            self._data_vars = value
+            self._data_vars = value  # type: ignore
 
     @property
     def json(self):
