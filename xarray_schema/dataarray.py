@@ -234,7 +234,26 @@ class DataArraySchema(BaseSchema):
 
     @classmethod
     def from_json(cls, obj: dict):
-        return cls(**obj)
+        kwargs = {}
+
+        if 'dtype' in obj:
+            kwargs['dtype'] = DTypeSchema.from_json(obj['dtype'])
+        if 'shape' in obj:
+            kwargs['shape'] = ShapeSchema.from_json(obj['shape'])
+        if 'dims' in obj:
+            kwargs['dims'] = DimsSchema.from_json(obj['dims'])
+        if 'name' in obj:
+            kwargs['name'] = NameSchema.from_json(obj['name'])
+        if 'coords' in obj:
+            kwargs['coords'] = CoordsSchema.from_json(obj['coords'])
+        if 'chunks' in obj:
+            kwargs['chunks'] = ChunksSchema.from_json(obj['chunks'])
+        if 'array_type' in obj:
+            kwargs['array_type'] = ArrayTypeSchema.from_json(obj['array_type'])
+        if 'attrs' in obj:
+            kwargs['attrs'] = AttrsSchema.from_json(obj['attrs'])
+
+        return cls(**kwargs)
 
 
 class CoordsSchema(BaseSchema):
@@ -243,16 +262,16 @@ class CoordsSchema(BaseSchema):
         'type': 'object',
         'properties': {
             'require_all_keys': {
-                'type': 'bool'
+                'type': 'boolean'
             },  # Question: is this the same as JSON's additionalProperties?
-            'allow_extra_keys': {'type': 'bool'},
+            'allow_extra_keys': {'type': 'boolean'},
             'coords': {'type': 'object'},
         },
     }
 
     def __init__(
         self,
-        coords: Mapping[str, Any],
+        coords: Mapping[str, DataArraySchema],
         require_all_keys: bool = True,
         allow_extra_keys: bool = True,
     ) -> None:
@@ -262,7 +281,9 @@ class CoordsSchema(BaseSchema):
 
     @classmethod
     def from_json(cls, obj: dict):
-        return cls(obj)
+        coords = obj.pop('coords', {})
+        coords = {k: DataArraySchema(**v) for k, v in coords.items()}
+        return cls(coords, **obj)
 
     def validate(self, coords: Any) -> None:
         '''Validate coords

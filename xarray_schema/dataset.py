@@ -4,7 +4,7 @@ import xarray as xr
 
 from .base import BaseSchema, SchemaError
 from .components import AttrSchema, AttrsSchema
-from .dataarray import DataArraySchema
+from .dataarray import CoordsSchema, DataArraySchema
 
 
 class DatasetSchema(BaseSchema):
@@ -42,7 +42,17 @@ class DatasetSchema(BaseSchema):
 
     @classmethod
     def from_json(cls, obj: dict):
-        return cls(**obj)
+        kwargs = {}
+        if 'data_vars' in obj:
+            kwargs['data_vars'] = {
+                k: DataArraySchema.from_json(v) for k, v in obj['data_vars'].items()
+            }
+        if 'coords' in obj:
+            kwargs['coords'] = {k: CoordsSchema.from_json(v) for k, v in obj['coords'].items()}
+        if 'attrs' in obj:
+            kwargs['attrs'] = {k: AttrsSchema.from_json(v) for k, v in obj['attrs'].items()}
+
+        return cls(**kwargs)
 
     def validate(self, ds: xr.Dataset) -> None:
         '''Check if the Dataset complies with the Schema.
@@ -92,9 +102,27 @@ class DatasetSchema(BaseSchema):
             self._attrs = AttrsSchema(value)
 
     @property
+    def data_vars(self) -> Dict[Hashable, Union[DataArraySchema, None]]:
+        return self._data_vars
+
+    @data_vars.setter
+    def data_vars(self, value: Union[Dict[Hashable, Union[DataArraySchema, None]], None]):
+        if isinstance(value, dict):
+            self._data_vars = {}
+            for k, v in value.items():
+                if isinstance(v, DataArraySchema):
+                    self._data_vars[k] = v
+                else:
+                    self._data_vars[k] = DataArraySchema(**v)
+        else:
+
+            self._data_vars = value
+
+    @property
     def json(self):
         obj = {'data_vars': {}, 'attrs': self.attrs.json if self.attrs is not None else {}}
         if self.data_vars:
             for key, var in self.data_vars.items():
+                print(var)
                 obj['data_vars'][key] = var.json
         return obj

@@ -16,6 +16,7 @@ from xarray_schema.components import (
     NameSchema,
     ShapeSchema,
 )
+from xarray_schema.dataarray import CoordsSchema
 
 
 @pytest.fixture
@@ -81,6 +82,12 @@ def ds():
                 'require_all_keys': True,
                 'attrs': {'foo': {'type': None, 'value': 1}},
             },
+        ),
+        (
+            CoordsSchema,
+            {'x': DataArraySchema(name='x')},
+            [{'x': xr.DataArray([0, 1], name='x')}],
+            {'coords': {'x': {'name': 'x'}}, 'allow_extra_keys': True, 'require_all_keys': True},
         ),
     ],
 )
@@ -158,6 +165,11 @@ def test_chunks_schema_raises_for_invalid_chunks():
         schema.validate(((2, 2),), ('x',), (4,))
 
 
+def test_unknown_array_type_raises():
+    with pytest.raises(ValueError, match=r'.*unknown array_type.*'):
+        _ = ArrayTypeSchema.from_json('foo.array')
+
+
 def test_dataarray_empty_constructor():
 
     da = xr.DataArray(np.ones(4, dtype='i4'))
@@ -187,6 +199,11 @@ def test_dataarray_component_constructors(kind, component, schema_args):
     jsonschema.validate(schema.json, schema._json_schema)
     assert isinstance(getattr(schema, kind), component)
 
+    # json roundtrip
+    rt_schema = DataArraySchema.from_json(schema.json)
+    assert isinstance(rt_schema, DataArraySchema)
+    assert rt_schema.json == schema.json
+
     schema.validate(da)
 
 
@@ -200,8 +217,6 @@ def test_dataarray_schema_validate_raises_for_invalid_input_type():
 def test_dataset_empty_constructor():
     ds_schema = DatasetSchema()
     assert hasattr(ds_schema, 'validate')
-    print(ds_schema.json)
-    print(ds_schema._json_schema)
     jsonschema.validate(ds_schema.json, ds_schema._json_schema)
     ds_schema.json == {}
 
@@ -227,6 +242,11 @@ def test_dataset_example(ds):
     ds = ds.drop_vars('foo')
     with pytest.raises(SchemaError, match='variable foo'):
         ds_schema.validate(ds)
+
+    # json roundtrip
+    rt_schema = DatasetSchema.from_json(ds_schema.json)
+    assert isinstance(rt_schema, DatasetSchema)
+    rt_schema.json == ds_schema.json
 
 
 def test_checks_ds(ds):
