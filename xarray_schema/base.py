@@ -22,4 +22,15 @@ class BaseSchema:
         pass
 
     def to_json(self, **dumps_kws) -> str:
+        '''Generate a JSON string representation of this schema
+
+        Parameters
+        ----------
+        dumps_kws : dict
+            Parameters to pass to ``json.dumps``.
+
+        Returns
+        -------
+        str
+        '''
         return json.dumps(self.json, **dumps_kws)
