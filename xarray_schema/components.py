@@ -8,6 +8,17 @@ from .types import ChunksT, DimsT, DTypeLike, ShapeT
 
 
 class DTypeSchema(BaseSchema):
+    '''Datatype schema
+
+    Parameters
+    ----------
+    dtype : DTypeLike
+        Datatype definition, may be (string, np.dtype, etc.)
+
+    Raises
+    ------
+    SchemaError
+    '''
 
     _json_schema = {'type': 'string'}
 
@@ -38,6 +49,17 @@ class DTypeSchema(BaseSchema):
 
 
 class DimsSchema(BaseSchema):
+    '''Dimensions schema
+
+    Parameters
+    ----------
+    dims : str or iterable of str
+        Dimensions definition, ``None`` may be used as a wildcard.
+
+    Raises
+    ------
+    SchemaError
+    '''
 
     _json_schema = {'type': 'array', 'items': {'type': ['string', 'null']}}
 
@@ -65,6 +87,17 @@ class DimsSchema(BaseSchema):
 
 
 class ShapeSchema(BaseSchema):
+    '''Shape schema
+
+    Parameters
+    ----------
+    shape : iterable of ints
+        Shape definition, ``None`` may be used as a wildcard.
+
+    Raises
+    ------
+    SchemaError
+    '''
 
     _json_schema = {'type': 'array', 'items': {'type': ['int', 'null']}}
 
@@ -94,6 +127,17 @@ class ShapeSchema(BaseSchema):
 
 
 class NameSchema(BaseSchema):
+    '''Name schema
+
+    Parameters
+    ----------
+    name : str
+        Name definition.
+
+    Raises
+    ------
+    SchemaError
+    '''
 
     _json_schema = {'type': 'string'}
 
@@ -120,6 +164,18 @@ class NameSchema(BaseSchema):
 
 
 class ChunksSchema(BaseSchema):
+    '''Chunks schema
+
+    Parameters
+    ----------
+    chunks : dict or bool
+        Chunks definition. If ``bool``, whether validated object should be chunked.
+        If ``dict``, mapping of dimension name to chunk size. None may be used as a wildcard.
+
+    Raises
+    ------
+    SchemaError
+    '''
 
     _json_schema = {'type': 'object'}  # TODO: fill this in with patternProperties
 
@@ -183,6 +239,17 @@ class ChunksSchema(BaseSchema):
 
 
 class ArrayTypeSchema(BaseSchema):
+    '''Array type schema
+
+    Parameters
+    ----------
+    array_type : str or object
+        Array type definition.
+
+    Raises
+    ------
+    SchemaError
+    '''
 
     _json_schema = {'type': 'string'}
 
@@ -206,6 +273,19 @@ class ArrayTypeSchema(BaseSchema):
 
 
 class AttrSchema(BaseSchema):
+    '''Attribute schema
+
+    Parameters
+    ----------
+    type : object
+        Attribute type definition.
+    value :
+        Attribute value definition.
+
+    Raises
+    ------
+    SchemaError
+    '''
 
     _json_schema = {'type': 'object'}  # TODO: add type/value here
 
@@ -214,7 +294,13 @@ class AttrSchema(BaseSchema):
         self.value = value
 
     def validate(self, attr: Any):
+        '''Validate attrs
 
+        Parameters
+        ----------
+        attr : any
+            attribute, `None` may be used as a wildcard value.
+        '''
         if self.type is not None:
             if not isinstance(attr, self.type):
                 SchemaError(f'attrs {attr} is not of type {self.type}')
@@ -229,6 +315,20 @@ class AttrSchema(BaseSchema):
 
 
 class AttrsSchema(BaseSchema):
+    '''Attributes schema
+
+    Parameters
+    ----------
+    attrs : str or iterable of str
+        Attributes definition
+    require_all_keys : bool
+        Whether require to all coordinates included in ``attrs``
+    allow_extra_keys : bool
+        Whether to allow coordinates not included in ``attrs`` dict
+    Raises
+    ------
+    SchemaError
+    '''
 
     _json_schema = {'type': 'string'}
 
@@ -248,7 +348,7 @@ class AttrsSchema(BaseSchema):
         Parameters
         ----------
         attrs : dict_like
-            attrs of the DataArray. `None` may be used as a wildcard value.
+            attrs dict, `None` may be used as a wildcard value.
         '''
 
         if self.require_all_keys:

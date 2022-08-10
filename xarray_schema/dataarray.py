@@ -233,6 +233,21 @@ class DataArraySchema(BaseSchema):
 
 
 class CoordsSchema(BaseSchema):
+    '''Schema container for Coordinates
+
+    Parameters
+    ----------
+    coords : dict
+        Dict of coordinate keys and ``DataArraySchema`` objects
+    require_all_keys : bool
+        Whether require to all coordinates included in ``coords``
+    allow_extra_keys : bool
+        Whether to allow coordinates not included in ``coords`` dict
+
+    Raises
+    ------
+    SchemaError
+    '''
 
     _json_schema = {'type': 'string'}
 
