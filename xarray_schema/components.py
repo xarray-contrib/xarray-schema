@@ -325,6 +325,7 @@ class AttrsSchema(BaseSchema):
         Whether require to all coordinates included in ``attrs``
     allow_extra_keys : bool
         Whether to allow coordinates not included in ``attrs`` dict
+
     Raises
     ------
     SchemaError
