@@ -1,0 +1,9 @@
+xarray>=0.16
+numpy>=1.21
+sphinx
+sphinx-autodoc-typehints
+sphinx_rtd_theme>=1.0
+ipython
+ipykernel
+jupyter_client
+nbsphinx

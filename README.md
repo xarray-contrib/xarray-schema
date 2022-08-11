@@ -80,23 +80,21 @@ dtype_schema = DTypeSchema('i4')
 dims_schema = DimsSchema(('x', 'y', None))  # None is used as a wildcard
 shape_schema = ShapeSchema((5, 10, None))  # None is used as a wildcard
 name_schema = NameSchema('foo')
-chunk_schema = ChunkSchema({'x': None, 'y': -1})  # None is used as a wildcard, -1 is used as
+chunk_schema = ChunksSchema({'x': None, 'y': -1})  # None is used as a wildcard, -1 is used as
 ArrayTypeSchema = ArrayTypeSchema(np.ndarray)
 
 # Example usage
-dtype_schama.validate(da.dtype)
+dtype_schema.validate(da.dtype)
 
 # Each object schema can be exported to JSON format
-dtype_json = dtype_schama.to_json()
+dtype_json = dtype_schema.to_json()
 ```
 
 ## roadmap
 
 This is a very early prototype of a library. Some key things are missing:
 
-1. Validation of `coords` and `attrs`. These are not implemented yet.
 1. Exceptions: Pandera accumulates schema exceptions and reports them all at once. Currently, we are a eagerly raising `SchemaErrors` when the are found.
-1. Roundtrip schemas to/from JSON and/or YAML format.
 
 ## license
 
