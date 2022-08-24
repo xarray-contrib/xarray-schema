@@ -115,13 +115,26 @@ class DatasetSchema(BaseSchema):
                 else:
                     self._data_vars[k] = DataArraySchema(**v)  # type: ignore
         else:
-            self._data_vars = value  # type: ignore
+            raise ValueError('must set data_vars with a dict')
+
+    @property
+    def coords(self) -> Optional[CoordsSchema]:
+        return self._coords  # type: ignore
+
+    @coords.setter
+    def coords(self, value: Optional[Union[CoordsSchema, Dict[Hashable, DataArraySchema]]]):
+        if value is None or isinstance(value, CoordsSchema):
+            self._coords = value
+        else:
+            self._coords = CoordsSchema(value)
 
     @property
     def json(self):
         obj = {'data_vars': {}, 'attrs': self.attrs.json if self.attrs is not None else {}}
         if self.data_vars:
             for key, var in self.data_vars.items():
-                print(var)
                 obj['data_vars'][key] = var.json
+        if self.coords:
+            print(self.coords.coords)
+            obj['coords'] = self.coords.json
         return obj
