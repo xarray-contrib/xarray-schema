@@ -1,18 +1,9 @@
-<p align="left">
-  <a href="https://carbonplan.org/#gh-light-mode-only">
-    <img src="https://carbonplan-assets.s3.amazonaws.com/monogram/dark-small.png" height="48px" />
-  </a>
-  <a href="https://carbonplan.org/#gh-dark-mode-only">
-    <img src="https://carbonplan-assets.s3.amazonaws.com/monogram/light-small.png" height="48px" />
-  </a>
-</p>
-
 # xarray-schema
 
 Schema validation for Xarray
 
-[![CI](https://github.com/carbonplan/ndpyramid/actions/workflows/main.yaml/badge.svg)](https://github.com/carbonplan/xarray-schema/actions/workflows/main.yaml)
-[![codecov](https://codecov.io/gh/carbonplan/xarray-schema/branch/main/graph/badge.svg?token=EI729ZRFK0)](https://codecov.io/gh/carbonplan/xarray-schema)
+[![CI](https://github.com/xarray-contrib/xarray-schema/actions/workflows/main.yaml/badge.svg)](https://github.com/carbonplan/xarray-schema/actions/workflows/main.yaml)
+[![codecov](https://codecov.io/gh/xarray-contrib/xarray-schema/branch/main/graph/badge.svg?token=EI729ZRFK0)](https://codecov.io/gh/xarray-contrib/xarray-schema)
 ![MIT License](https://badgen.net/badge/license/MIT/blue)
 
 ## installation
@@ -32,7 +23,7 @@ conda install -c conda-forge xarray-schema
 Or install it from source:
 
 ```shell
-pip install git+https://github.com/carbonplan/xarray-schema
+pip install git+https://github.com/xarray-contrib/xarray-schema
 ```
 
 ## usage
@@ -98,8 +89,8 @@ This is a very early prototype of a library. Some key things are missing:
 
 ## license
 
-All the code in this repository is [MIT](https://choosealicense.com/licenses/mit/) licensed, but we request that you please provide attribution if reusing any of our digital content (graphics, logo, articles, etc.).
+All the code in this repository is [MIT](https://choosealicense.com/licenses/mit/) licensed.
 
-## about us
+## history
 
-CarbonPlan is a non-profit organization that uses data and science for climate action. We aim to improve the transparency and scientific integrity of climate solutions through open data and tools. Find out more at [carbonplan.org](https://carbonplan.org/) or get in touch by [opening an issue](https://github.com/carbonplan/xarray-schema/issues/new) or [sending us an email](mailto:hello@carbonplan.org).
+This project was originally developed at [CarbonPlan](https://carbonplan.org/). It was transferred to the xarray-contrib organization in August 2022.
