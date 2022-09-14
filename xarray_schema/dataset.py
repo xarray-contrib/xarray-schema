@@ -1,10 +1,10 @@
-from typing import Any, Callable, Dict, Hashable, Iterable, Union
+from typing import Any, Callable, Dict, Hashable, Iterable, Optional, Union
 
 import xarray as xr
 
 from .base import BaseSchema, SchemaError
 from .components import AttrSchema, AttrsSchema
-from .dataarray import DataArraySchema
+from .dataarray import CoordsSchema, DataArraySchema
 
 
 class DatasetSchema(BaseSchema):
@@ -18,18 +18,41 @@ class DatasetSchema(BaseSchema):
         Dataset wide checks, by default None
     '''
 
+    _json_schema = {
+        'type': 'object',
+        'properties': {
+            'data_vars': {'type': 'object'},
+            'coords': {'type': 'object'},
+            'attrs': {'type': 'object'},
+        },
+    }
+
     def __init__(
         self,
-        data_vars: Dict[Hashable, Union[DataArraySchema, None]] = None,
-        coords: Dict[Hashable, Any] = None,
+        data_vars: Optional[Dict[Hashable, Optional[DataArraySchema]]] = None,
+        coords: Union[CoordsSchema, Dict[Hashable, DataArraySchema], None] = None,
         attrs: Union[AttrsSchema, Dict[Hashable, AttrSchema], None] = None,
         checks: Iterable[Callable] = None,
     ) -> None:
 
-        self.data_vars = data_vars
-        self.coords = coords
+        self.data_vars = data_vars  # type: ignore
+        self.coords = coords  # type: ignore
         self.attrs = attrs  # type: ignore
         self.checks = checks
+
+    @classmethod
+    def from_json(cls, obj: dict):
+        kwargs = {}
+        if 'data_vars' in obj:
+            kwargs['data_vars'] = {
+                k: DataArraySchema.from_json(v) for k, v in obj['data_vars'].items()
+            }
+        if 'coords' in obj:
+            kwargs['coords'] = {k: CoordsSchema.from_json(v) for k, v in obj['coords'].items()}
+        if 'attrs' in obj:
+            kwargs['attrs'] = {k: AttrsSchema.from_json(v) for k, v in obj['attrs'].items()}
+
+        return cls(**kwargs)
 
     def validate(self, ds: xr.Dataset) -> None:
         '''Check if the Dataset complies with the Schema.
@@ -79,9 +102,40 @@ class DatasetSchema(BaseSchema):
             self._attrs = AttrsSchema(value)
 
     @property
+    def data_vars(self) -> Optional[Dict[Hashable, Optional[DataArraySchema]]]:
+        return self._data_vars  # type: ignore
+
+    @data_vars.setter
+    def data_vars(self, value: Optional[Dict[Hashable, Optional[DataArraySchema]]]):
+        if isinstance(value, dict):
+            self._data_vars = {}
+            for k, v in value.items():
+                if isinstance(v, DataArraySchema):
+                    self._data_vars[k] = v
+                else:
+                    self._data_vars[k] = DataArraySchema(**v)  # type: ignore
+        elif value is None:
+            self._data_vars = None  # type: ignore
+        else:
+            raise ValueError('must set data_vars with a dict')
+
+    @property
+    def coords(self) -> Optional[CoordsSchema]:
+        return self._coords  # type: ignore
+
+    @coords.setter
+    def coords(self, value: Optional[Union[CoordsSchema, Dict[Hashable, DataArraySchema]]]):
+        if value is None or isinstance(value, CoordsSchema):
+            self._coords = value
+        else:
+            self._coords = CoordsSchema(value)
+
+    @property
     def json(self):
-        obj = {'data_vars': {}, 'attrs': self.attrs.json if self.attrs is not None else None}
+        obj = {'data_vars': {}, 'attrs': self.attrs.json if self.attrs is not None else {}}
         if self.data_vars:
             for key, var in self.data_vars.items():
                 obj['data_vars'][key] = var.json
+        if self.coords:
+            obj['coords'] = self.coords.json
         return obj

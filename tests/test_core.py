@@ -1,3 +1,5 @@
+import dask.array
+import jsonschema
 import numpy as np
 import pytest
 import xarray as xr
@@ -14,6 +16,7 @@ from xarray_schema.components import (
     NameSchema,
     ShapeSchema,
 )
+from xarray_schema.dataarray import CoordsSchema
 
 
 @pytest.fixture
@@ -40,6 +43,12 @@ def ds():
         (ShapeSchema, (1, 2, 3), [(1, 2, 3)], [1, 2, 3]),
         (NameSchema, 'foo', ['foo'], 'foo'),
         (ArrayTypeSchema, np.ndarray, [np.array([1, 2, 3])], "<class 'numpy.ndarray'>"),
+        (
+            ArrayTypeSchema,
+            dask.array.Array,
+            [dask.array.zeros(4)],
+            "<class 'dask.array.core.Array'>",
+        ),
         # schema_args for ChunksSchema include [chunks, dims, shape]
         (ChunksSchema, True, [(((1, 1),), ('x',), (2,))], True),
         (ChunksSchema, {'x': 2}, [(((2, 2),), ('x',), (4,))], {'x': 2}),
@@ -58,13 +67,27 @@ def ds():
             AttrsSchema,
             {'foo': AttrSchema(value='bar')},
             [{'foo': 'bar'}],
-            {'foo': {'type': None, 'value': 'bar'}},
+            {
+                'allow_extra_keys': True,
+                'require_all_keys': True,
+                'attrs': {'foo': {'type': None, 'value': 'bar'}},
+            },
         ),
         (
             AttrsSchema,
             {'foo': AttrSchema(value=1)},
             [{'foo': 1}],
-            {'foo': {'type': None, 'value': 1}},
+            {
+                'allow_extra_keys': True,
+                'require_all_keys': True,
+                'attrs': {'foo': {'type': None, 'value': 1}},
+            },
+        ),
+        (
+            CoordsSchema,
+            {'x': DataArraySchema(name='x')},
+            [{'x': xr.DataArray([0, 1], name='x')}],
+            {'coords': {'x': {'name': 'x'}}, 'allow_extra_keys': True, 'require_all_keys': True},
         ),
     ],
 )
@@ -77,6 +100,12 @@ def test_component_schema(component, schema_args, validate, json):
             schema.validate(v)
     assert schema.json == json
     assert isinstance(schema.to_json(), str)
+
+    # validate schema
+    jsonschema.validate(schema.json, schema._json_schema)
+
+    # json roundtrip
+    component.from_json(schema.json).json == json
 
 
 @pytest.mark.parametrize(
@@ -136,11 +165,17 @@ def test_chunks_schema_raises_for_invalid_chunks():
         schema.validate(((2, 2),), ('x',), (4,))
 
 
+def test_unknown_array_type_raises():
+    with pytest.raises(ValueError, match=r'.*unknown array_type.*'):
+        _ = ArrayTypeSchema.from_json('foo.array')
+
+
 def test_dataarray_empty_constructor():
 
     da = xr.DataArray(np.ones(4, dtype='i4'))
     da_schema = DataArraySchema()
     assert hasattr(da_schema, 'validate')
+    jsonschema.validate(da_schema.json, da_schema._json_schema)
     assert da_schema.json == {}
     da_schema.validate(da)
 
@@ -161,7 +196,13 @@ def test_dataarray_component_constructors(kind, component, schema_args):
     comp_schema = component(schema_args)
     schema = DataArraySchema(**{kind: schema_args})
     assert comp_schema.json == getattr(schema, kind).json
+    jsonschema.validate(schema.json, schema._json_schema)
     assert isinstance(getattr(schema, kind), component)
+
+    # json roundtrip
+    rt_schema = DataArraySchema.from_json(schema.json)
+    assert isinstance(rt_schema, DataArraySchema)
+    assert rt_schema.json == schema.json
 
     schema.validate(da)
 
@@ -176,6 +217,7 @@ def test_dataarray_schema_validate_raises_for_invalid_input_type():
 def test_dataset_empty_constructor():
     ds_schema = DatasetSchema()
     assert hasattr(ds_schema, 'validate')
+    jsonschema.validate(ds_schema.json, ds_schema._json_schema)
     ds_schema.json == {}
 
 
@@ -187,6 +229,9 @@ def test_dataset_example(ds):
             'bar': DataArraySchema(name='bar', dtype=np.floating, dims=['x', 'y']),
         }
     )
+
+    jsonschema.validate(ds_schema.json, ds_schema._json_schema)
+
     assert list(ds_schema.json['data_vars'].keys()) == ['foo', 'bar']
     ds_schema.validate(ds)
 
@@ -197,6 +242,11 @@ def test_dataset_example(ds):
     ds = ds.drop_vars('foo')
     with pytest.raises(SchemaError, match='variable foo'):
         ds_schema.validate(ds)
+
+    # json roundtrip
+    rt_schema = DatasetSchema.from_json(ds_schema.json)
+    assert isinstance(rt_schema, DatasetSchema)
+    rt_schema.json == ds_schema.json
 
 
 def test_checks_ds(ds):
@@ -224,7 +274,10 @@ def test_dataset_with_attrs_schema():
     actual_value = 'actual_value'
     ds = xr.Dataset(attrs={name: actual_value})
     ds_schema = DatasetSchema(attrs={name: AttrSchema(value=expected_value)})
+    jsonschema.validate(ds_schema.json, ds_schema._json_schema)
+
     ds_schema_2 = DatasetSchema(attrs=AttrsSchema({name: AttrSchema(value=expected_value)}))
+    jsonschema.validate(ds_schema_2.json, ds_schema_2._json_schema)
     with pytest.raises(SchemaError):
         ds_schema.validate(ds)
     with pytest.raises(SchemaError):
@@ -248,6 +301,8 @@ def test_attrs_extra_key():
             require_all_keys=True,
         )
     )
+    jsonschema.validate(ds_schema.json, ds_schema._json_schema)
+
     with pytest.raises(SchemaError):
         ds_schema.validate(ds)
 

@@ -28,6 +28,14 @@ class DTypeSchema(BaseSchema):
         else:
             self.dtype = np.dtype(dtype)
 
+    @classmethod
+    def from_json(cls, obj: str):
+        if obj in ['floating', 'integer', 'signedinteger', 'unsignedinteger', 'generic']:
+            dtype = getattr(np, obj)
+        else:
+            dtype = obj
+        return cls(dtype)
+
     def validate(self, dtype: DTypeLike) -> None:
         '''Validate dtype
 
@@ -45,7 +53,7 @@ class DTypeSchema(BaseSchema):
             return self.dtype.str
         else:
             # fallbacks
-            return getattr(self.dtype, '__name__', str(self.dtype))
+            return str(getattr(self.dtype, '__name__', str(self.dtype)))
 
 
 class DimsSchema(BaseSchema):
@@ -65,6 +73,10 @@ class DimsSchema(BaseSchema):
 
     def __init__(self, dims: DimsT) -> None:
         self.dims = dims
+
+    @classmethod
+    def from_json(cls, obj: DimsT):
+        return cls(obj)
 
     def validate(self, dims: tuple) -> None:
         '''Validate dimensions
@@ -99,10 +111,14 @@ class ShapeSchema(BaseSchema):
     SchemaError
     '''
 
-    _json_schema = {'type': 'array', 'items': {'type': ['int', 'null']}}
+    _json_schema = {'type': 'array'}
 
     def __init__(self, shape: ShapeT) -> None:
         self.shape = shape
+
+    @classmethod
+    def from_json(cls, obj: ShapeT):
+        return cls(obj)
 
     def validate(self, shape: tuple) -> None:
         '''Validate shape
@@ -144,6 +160,10 @@ class NameSchema(BaseSchema):
     def __init__(self, name: str) -> None:
         self.name = name
 
+    @classmethod
+    def from_json(cls, obj: str):
+        return cls(obj)
+
     def validate(self, name: Hashable) -> None:
         '''Validate name
 
@@ -177,10 +197,14 @@ class ChunksSchema(BaseSchema):
     SchemaError
     '''
 
-    _json_schema = {'type': 'object'}  # TODO: fill this in with patternProperties
+    _json_schema = {'type': ['boolean', 'object']}
 
     def __init__(self, chunks: ChunksT) -> None:
         self.chunks = chunks
+
+    @classmethod
+    def from_json(cls, obj: dict):
+        return cls(obj)  # TODO: this will likely need input validation.
 
     def validate(
         self, chunks: Optional[Tuple[Tuple[int, ...], ...]], dims: Tuple, shape: Tuple[int, ...]
@@ -256,6 +280,20 @@ class ArrayTypeSchema(BaseSchema):
     def __init__(self, array_type: Any) -> None:
         self.array_type = array_type
 
+    @classmethod
+    def from_json(cls, obj: str):
+        array_type: Any  # TODO: figure out how to optionally include the dask array type
+
+        if obj == "<class 'dask.array.core.Array'>":
+            import dask.array as da
+
+            array_type = da.Array
+        elif obj == "<class 'numpy.ndarray'>":
+            array_type = np.ndarray
+        else:
+            raise ValueError(f'unknown array_type: {obj}')
+        return cls(array_type)
+
     def validate(self, array: Any) -> None:
         '''Validate array_type
 
@@ -287,11 +325,15 @@ class AttrSchema(BaseSchema):
     SchemaError
     '''
 
-    _json_schema = {'type': 'object'}  # TODO: add type/value here
+    _json_schema = {'type': 'string', 'value': ['string', 'number', 'array', 'boolean', 'null']}
 
     def __init__(self, type: Any = None, value: Any = None):
         self.type = type
         self.value = value
+
+    @classmethod
+    def from_json(cls, obj: str):
+        return cls(obj)
 
     def validate(self, attr: Any):
         '''Validate attrs
@@ -331,7 +373,16 @@ class AttrsSchema(BaseSchema):
     SchemaError
     '''
 
-    _json_schema = {'type': 'string'}
+    _json_schema = {
+        'type': 'object',
+        'properties': {
+            'require_all_keys': {
+                'type': 'boolean'
+            },  # Question: is this the same as JSON's additionalProperties?
+            'allow_extra_keys': {'type': 'boolean'},
+            'attrs': {'type': 'object'},
+        },
+    }
 
     def __init__(
         self,
@@ -342,6 +393,17 @@ class AttrsSchema(BaseSchema):
         self.attrs = attrs
         self.require_all_keys = require_all_keys
         self.allow_extra_keys = allow_extra_keys
+
+    @classmethod
+    def from_json(cls, obj: dict):
+        attrs = {}
+        for key, val in obj['attrs'].items():
+            attrs[key] = AttrSchema(**val)
+        return cls(
+            attrs,
+            require_all_keys=obj['require_all_keys'],
+            allow_extra_keys=obj['allow_extra_keys'],
+        )
 
     def validate(self, attrs: Any) -> None:
         '''Validate attrs
@@ -370,4 +432,9 @@ class AttrsSchema(BaseSchema):
 
     @property
     def json(self) -> dict:
-        return {k: v.json for k, v in self.attrs.items()}
+        obj = {
+            'require_all_keys': self.require_all_keys,
+            'allow_extra_keys': self.allow_extra_keys,
+            'attrs': {k: v.json for k, v in self.attrs.items()},
+        }
+        return obj

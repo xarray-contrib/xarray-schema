@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List, Mapping, Optional, Union
+from typing import Any, Callable, Dict, Hashable, List, Mapping, Optional, Union
 
 import xarray as xr
 
@@ -39,6 +39,7 @@ class DataArraySchema(BaseSchema):
         List of callables that take and return a DataArray, by default None
     '''
 
+    _json_schema = {'type': 'object'}
     _schema_slots = ['dtype', 'dims', 'shape', 'coords', 'name', 'chunks', 'attrs', 'array_type']
 
     _dtype: Union[DTypeSchema, None]
@@ -231,6 +232,29 @@ class DataArraySchema(BaseSchema):
                 pass
         return obj
 
+    @classmethod
+    def from_json(cls, obj: dict):
+        kwargs = {}
+
+        if 'dtype' in obj:
+            kwargs['dtype'] = DTypeSchema.from_json(obj['dtype'])
+        if 'shape' in obj:
+            kwargs['shape'] = ShapeSchema.from_json(obj['shape'])
+        if 'dims' in obj:
+            kwargs['dims'] = DimsSchema.from_json(obj['dims'])
+        if 'name' in obj:
+            kwargs['name'] = NameSchema.from_json(obj['name'])
+        if 'coords' in obj:
+            kwargs['coords'] = CoordsSchema.from_json(obj['coords'])
+        if 'chunks' in obj:
+            kwargs['chunks'] = ChunksSchema.from_json(obj['chunks'])
+        if 'array_type' in obj:
+            kwargs['array_type'] = ArrayTypeSchema.from_json(obj['array_type'])
+        if 'attrs' in obj:
+            kwargs['attrs'] = AttrsSchema.from_json(obj['attrs'])
+
+        return cls(**kwargs)
+
 
 class CoordsSchema(BaseSchema):
     '''Schema container for Coordinates
@@ -249,17 +273,32 @@ class CoordsSchema(BaseSchema):
     SchemaError
     '''
 
-    _json_schema = {'type': 'string'}
+    _json_schema = {
+        'type': 'object',
+        'properties': {
+            'require_all_keys': {
+                'type': 'boolean'
+            },  # Question: is this the same as JSON's additionalProperties?
+            'allow_extra_keys': {'type': 'boolean'},
+            'coords': {'type': 'object'},
+        },
+    }
 
     def __init__(
         self,
-        coords: Mapping[str, Any],
+        coords: Dict[Hashable, DataArraySchema],
         require_all_keys: bool = True,
         allow_extra_keys: bool = True,
     ) -> None:
         self.coords = coords
         self.require_all_keys = require_all_keys
         self.allow_extra_keys = allow_extra_keys
+
+    @classmethod
+    def from_json(cls, obj: dict):
+        coords = obj.pop('coords', {})
+        coords = {k: DataArraySchema(**v) for k, v in coords.items()}
+        return cls(coords, **obj)
 
     def validate(self, coords: Any) -> None:
         '''Validate coords
@@ -288,4 +327,9 @@ class CoordsSchema(BaseSchema):
 
     @property
     def json(self) -> dict:
-        return {k: v.json for k, v in self.coords.items()}
+        obj = {
+            'require_all_keys': self.require_all_keys,
+            'allow_extra_keys': self.allow_extra_keys,
+            'coords': {k: v.json for k, v in self.coords.items()},
+        }
+        return obj
