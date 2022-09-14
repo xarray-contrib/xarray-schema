@@ -36,7 +36,7 @@ setup(
     maintainer='Joe Hamman',
     maintainer_email='joe@carbonplan.org',
     classifiers=CLASSIFIERS,
-    url='https://github.com/carbonplan/xarray-schema',
+    url='https://github.com/xarray-contrib/xarray-schema',
     packages=find_packages(exclude=('tests',)),
     package_dir={'xarray_schema': 'xarray_schema'},
     include_package_data=True,
