@@ -115,7 +115,7 @@ class DatasetSchema(BaseSchema):
                 else:
                     self._data_vars[k] = DataArraySchema(**v)  # type: ignore
         elif value is None:
-            self._data_vars = None
+            self._data_vars = None  # type: ignore
         else:
             raise ValueError('must set data_vars with a dict')
 
