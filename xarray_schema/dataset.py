@@ -137,6 +137,5 @@ class DatasetSchema(BaseSchema):
             for key, var in self.data_vars.items():
                 obj['data_vars'][key] = var.json
         if self.coords:
-            print(self.coords.coords)
             obj['coords'] = self.coords.json
         return obj
