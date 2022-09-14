@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List, Mapping, Optional, Union
+from typing import Any, Callable, Dict, Hashable, List, Mapping, Optional, Union
 
 import xarray as xr
 
@@ -286,7 +286,7 @@ class CoordsSchema(BaseSchema):
 
     def __init__(
         self,
-        coords: Mapping[str, DataArraySchema],
+        coords: Dict[Hashable, DataArraySchema],
         require_all_keys: bool = True,
         allow_extra_keys: bool = True,
     ) -> None:
