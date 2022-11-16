@@ -57,11 +57,13 @@ version_scheme = "post-release"
 local_scheme = "dirty-tag"
 fallback_version = "999"
 
-[tool.isort]
-profile = "black"
-skip_gitignore = true
-
 
 [tool.pytest.ini_options]
 log_cli = true
 log_level = "INFO"
+
+[tool.mypy]
+allow_redefinition = true
+exclude = "properties|asv_bench|doc|tests|flycheck"
+files = "xarray_schema/*.py"
+show_error_codes = true

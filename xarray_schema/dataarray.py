@@ -7,8 +7,15 @@ from typing import Any, Callable
 import xarray as xr
 
 from .base import BaseSchema, SchemaError
-from .components import (ArrayTypeSchema, AttrsSchema, ChunksSchema,
-                         DimsSchema, DTypeSchema, NameSchema, ShapeSchema)
+from .components import (
+    ArrayTypeSchema,
+    AttrsSchema,
+    ChunksSchema,
+    DimsSchema,
+    DTypeSchema,
+    NameSchema,
+    ShapeSchema,
+)
 from .types import ChunksT, DimsT, DTypeLike, ShapeT
 
 

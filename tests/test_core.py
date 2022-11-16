@@ -8,9 +8,16 @@ import xarray as xr
 
 from xarray_schema import DataArraySchema, DatasetSchema
 from xarray_schema.base import SchemaError
-from xarray_schema.components import (ArrayTypeSchema, AttrSchema, AttrsSchema,
-                                      ChunksSchema, DimsSchema, DTypeSchema,
-                                      NameSchema, ShapeSchema)
+from xarray_schema.components import (
+    ArrayTypeSchema,
+    AttrSchema,
+    AttrsSchema,
+    ChunksSchema,
+    DimsSchema,
+    DTypeSchema,
+    NameSchema,
+    ShapeSchema,
+)
 from xarray_schema.dataarray import CoordsSchema
 
 
