@@ -1,17 +1,17 @@
 import json
 from abc import abstractmethod
-from typing import Any, Dict
+from typing import Any
 
 
 class SchemaError(Exception):
-    '''Custom Schema Error'''
+    """Custom Schema Error"""
 
     pass
 
 
 class BaseSchema:
 
-    _json_schema: Dict[str, Any]
+    _json_schema: dict[str, Any]
 
     # def validate(self, obj: Any) -> None:
     #     pass
@@ -22,7 +22,7 @@ class BaseSchema:
         pass
 
     def to_json(self, **dumps_kws) -> str:
-        '''Generate a JSON string representation of this schema
+        """Generate a JSON string representation of this schema
 
         Parameters
         ----------
@@ -32,7 +32,7 @@ class BaseSchema:
         Returns
         -------
         str
-        '''
+        """
         return json.dumps(self.json, **dumps_kws)
 
     @classmethod
