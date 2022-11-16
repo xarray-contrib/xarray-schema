@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # flake8: noqa
 
-from importlib.metadata import PackageNotFoundError as _PackageNotFoundError, version as _version
+from importlib.metadata import PackageNotFoundError as _PackageNotFoundError
+from importlib.metadata import version as _version
 
 from .base import SchemaError
 from .components import (
