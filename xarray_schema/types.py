@@ -1,7 +1,7 @@
-from typing import Dict, Tuple, Union
+from __future__ import annotations
 
-from numpy.typing import DTypeLike  # noqa: F401
+from typing import Union
 
-DimsT = Tuple[Union[str, None]]
-ShapeT = Tuple[Union[int, None]]
-ChunksT = Union[bool, Dict[str, Union[int, None]]]
+DimsT = tuple[Union[str, None]]
+ShapeT = tuple[Union[int, None]]
+ChunksT = Union[bool, dict[str, Union[int, None]]]

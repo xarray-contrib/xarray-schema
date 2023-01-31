@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, Hashable, List, Mapping, Optional, Union
+import contextlib
+from collections.abc import Hashable, Mapping
+from typing import Any, Callable
 
 import xarray as xr
 
@@ -18,7 +20,7 @@ from .types import ChunksT, DimsT, DTypeLike, ShapeT
 
 
 class DataArraySchema(BaseSchema):
-    '''A light-weight xarray.DataArray validator
+    """A light-weight xarray.DataArray validator
 
     Parameters
     ----------
@@ -37,31 +39,40 @@ class DataArraySchema(BaseSchema):
         Type of the underlying data in a DataArray (e.g. `numpy.ndarray`), by default None
     checks : List[Callable], optional
         List of callables that take and return a DataArray, by default None
-    '''
+    """
 
-    _json_schema = {'type': 'object'}
-    _schema_slots = ['dtype', 'dims', 'shape', 'coords', 'name', 'chunks', 'attrs', 'array_type']
+    _json_schema = {"type": "object"}
+    _schema_slots = [
+        "dtype",
+        "dims",
+        "shape",
+        "coords",
+        "name",
+        "chunks",
+        "attrs",
+        "array_type",
+    ]
 
-    _dtype: Union[DTypeSchema, None]
-    _shape: Union[ShapeSchema, None]
-    _dims: Union[DimsSchema, None]
-    _name: Union[NameSchema, None]
-    _coords: Union[Any, None]
-    _chunks: Union[ChunksSchema, None]
-    _attrs: Union[AttrsSchema, None]
-    _array_type: Union[ArrayTypeSchema, None]
+    _dtype: DTypeSchema | None
+    _shape: ShapeSchema | None
+    _dims: DimsSchema | None
+    _name: NameSchema | None
+    _coords: Any | None
+    _chunks: ChunksSchema | None
+    _attrs: AttrsSchema | None
+    _array_type: ArrayTypeSchema | None
 
     def __init__(
         self,
-        dtype: Union[DTypeLike, DTypeSchema] = None,
-        shape: Union[ShapeT, ShapeSchema] = None,
-        dims: Union[DimsT, DimsSchema] = None,
-        name: Union[str, NameSchema] = None,
-        coords: Dict[str, Any] = None,
-        chunks: Union[ChunksT, ChunksSchema] = None,
+        dtype: DTypeLike | DTypeSchema = None,
+        shape: ShapeT | ShapeSchema = None,
+        dims: DimsT | DimsSchema = None,
+        name: str | NameSchema = None,
+        coords: dict[str, Any] = None,
+        chunks: ChunksT | ChunksSchema = None,
         array_type: Any = None,
         attrs: Mapping[str, Any] = None,
-        checks: List[Callable] = None,
+        checks: list[Callable] = None,
     ) -> None:
         # see https://github.com/python/mypy/issues/3004
         self.dtype = dtype  # type: ignore
@@ -75,18 +86,18 @@ class DataArraySchema(BaseSchema):
         self.checks = checks  # type: ignore
 
     @property
-    def dtype(self) -> Union[DTypeSchema, None]:
+    def dtype(self) -> DTypeSchema | None:
         return self._dtype
 
     @dtype.setter
-    def dtype(self, value: Union[DTypeSchema, DTypeLike, None]):
+    def dtype(self, value: DTypeSchema | DTypeLike | None):
         if value is None or isinstance(value, DTypeSchema):
             self._dtype = value
         else:
             self._dtype = DTypeSchema(value)
 
     @property
-    def dims(self) -> Union[DimsSchema, None]:
+    def dims(self) -> DimsSchema | None:
         return self._dims
 
     @dims.setter
@@ -97,18 +108,18 @@ class DataArraySchema(BaseSchema):
             self._dims = DimsSchema(value)
 
     @property
-    def shape(self) -> Optional[ShapeSchema]:
+    def shape(self) -> ShapeSchema | None:
         return self._shape
 
     @shape.setter
-    def shape(self, value: Union[ShapeSchema, ShapeT, None]):
+    def shape(self, value: ShapeSchema | ShapeT | None):
         if value is None or isinstance(value, ShapeSchema):
             self._shape = value
         else:
             self._shape = ShapeSchema(value)
 
     @property
-    def chunks(self) -> Optional[ChunksSchema]:
+    def chunks(self) -> ChunksSchema | None:
         return self._chunks
 
     @chunks.setter
@@ -119,7 +130,7 @@ class DataArraySchema(BaseSchema):
             self._chunks = ChunksSchema(value)
 
     @property
-    def name(self) -> Optional[NameSchema]:
+    def name(self) -> NameSchema | None:
         return self._name
 
     @name.setter
@@ -130,7 +141,7 @@ class DataArraySchema(BaseSchema):
             self._name = NameSchema(value)
 
     @property
-    def array_type(self) -> Optional[ArrayTypeSchema]:
+    def array_type(self) -> ArrayTypeSchema | None:
         return self._array_type
 
     @array_type.setter
@@ -141,7 +152,7 @@ class DataArraySchema(BaseSchema):
             self._array_type = ArrayTypeSchema(value)
 
     @property
-    def attrs(self) -> Optional[AttrsSchema]:
+    def attrs(self) -> AttrsSchema | None:
         return self._attrs
 
     @attrs.setter
@@ -152,7 +163,7 @@ class DataArraySchema(BaseSchema):
             self._attrs = AttrsSchema(value)
 
     @property
-    def coords(self) -> Optional[CoordsSchema]:
+    def coords(self) -> CoordsSchema | None:
         return self._coords
 
     @coords.setter
@@ -163,20 +174,21 @@ class DataArraySchema(BaseSchema):
             self._coords = CoordsSchema(value)
 
     @property
-    def checks(self) -> List[Callable]:
+    def checks(self) -> list[Callable]:
         return self._checks
 
     @checks.setter
     def checks(self, value):
-        if value is not None:
-            if not all([callable(f) for f in value]):
-                raise ValueError('All checks must be callables')
-            self._checks = value
-        else:
+        if value is None:
             self._checks = []
 
+        elif not all(callable(f) for f in value):
+            raise ValueError("All checks must be callables")
+        else:
+            self._checks = value
+
     def validate(self, da: xr.DataArray) -> None:
-        '''Check if the DataArray complies with the Schema.
+        """Check if the DataArray complies with the Schema.
 
         Parameters
         ----------
@@ -191,9 +203,9 @@ class DataArraySchema(BaseSchema):
         Raises
         ------
         SchemaError
-        '''
+        """
         if not isinstance(da, xr.DataArray):
-            raise ValueError('Input must be a xarray.DataArray')
+            raise ValueError("Input must be a xarray.DataArray")
 
         if self.dtype is not None:
             self.dtype.validate(da.dtype)
@@ -226,38 +238,36 @@ class DataArraySchema(BaseSchema):
     def json(self) -> dict:
         obj = {}
         for slot in self._schema_slots:
-            try:
+            with contextlib.suppress(AttributeError):
                 obj[slot] = getattr(self, slot).json
-            except AttributeError:
-                pass
         return obj
 
     @classmethod
     def from_json(cls, obj: dict):
         kwargs = {}
 
-        if 'dtype' in obj:
-            kwargs['dtype'] = DTypeSchema.from_json(obj['dtype'])
-        if 'shape' in obj:
-            kwargs['shape'] = ShapeSchema.from_json(obj['shape'])
-        if 'dims' in obj:
-            kwargs['dims'] = DimsSchema.from_json(obj['dims'])
-        if 'name' in obj:
-            kwargs['name'] = NameSchema.from_json(obj['name'])
-        if 'coords' in obj:
-            kwargs['coords'] = CoordsSchema.from_json(obj['coords'])
-        if 'chunks' in obj:
-            kwargs['chunks'] = ChunksSchema.from_json(obj['chunks'])
-        if 'array_type' in obj:
-            kwargs['array_type'] = ArrayTypeSchema.from_json(obj['array_type'])
-        if 'attrs' in obj:
-            kwargs['attrs'] = AttrsSchema.from_json(obj['attrs'])
+        if "dtype" in obj:
+            kwargs["dtype"] = DTypeSchema.from_json(obj["dtype"])
+        if "shape" in obj:
+            kwargs["shape"] = ShapeSchema.from_json(obj["shape"])
+        if "dims" in obj:
+            kwargs["dims"] = DimsSchema.from_json(obj["dims"])
+        if "name" in obj:
+            kwargs["name"] = NameSchema.from_json(obj["name"])
+        if "coords" in obj:
+            kwargs["coords"] = CoordsSchema.from_json(obj["coords"])
+        if "chunks" in obj:
+            kwargs["chunks"] = ChunksSchema.from_json(obj["chunks"])
+        if "array_type" in obj:
+            kwargs["array_type"] = ArrayTypeSchema.from_json(obj["array_type"])
+        if "attrs" in obj:
+            kwargs["attrs"] = AttrsSchema.from_json(obj["attrs"])
 
         return cls(**kwargs)
 
 
 class CoordsSchema(BaseSchema):
-    '''Schema container for Coordinates
+    """Schema container for Coordinates
 
     Parameters
     ----------
@@ -271,22 +281,22 @@ class CoordsSchema(BaseSchema):
     Raises
     ------
     SchemaError
-    '''
+    """
 
     _json_schema = {
-        'type': 'object',
-        'properties': {
-            'require_all_keys': {
-                'type': 'boolean'
+        "type": "object",
+        "properties": {
+            "require_all_keys": {
+                "type": "boolean"
             },  # Question: is this the same as JSON's additionalProperties?
-            'allow_extra_keys': {'type': 'boolean'},
-            'coords': {'type': 'object'},
+            "allow_extra_keys": {"type": "boolean"},
+            "coords": {"type": "object"},
         },
     }
 
     def __init__(
         self,
-        coords: Dict[Hashable, DataArraySchema],
+        coords: dict[Hashable, DataArraySchema],
         require_all_keys: bool = True,
         allow_extra_keys: bool = True,
     ) -> None:
@@ -296,40 +306,39 @@ class CoordsSchema(BaseSchema):
 
     @classmethod
     def from_json(cls, obj: dict):
-        coords = obj.pop('coords', {})
+        coords = obj.pop("coords", {})
         coords = {k: DataArraySchema(**v) for k, v in coords.items()}
         return cls(coords, **obj)
 
     def validate(self, coords: Any) -> None:
-        '''Validate coords
+        """Validate coords
 
         Parameters
         ----------
         coords : dict_like
             coords of the DataArray. `None` may be used as a wildcard value.
-        '''
+        """
 
         if self.require_all_keys:
             missing_keys = set(self.coords) - set(coords)
             if missing_keys:
-                raise SchemaError(f'coords has missing keys: {missing_keys}')
+                raise SchemaError(f"coords has missing keys: {missing_keys}")
 
         if not self.allow_extra_keys:
             extra_keys = set(coords) - set(self.coords)
             if extra_keys:
-                raise SchemaError(f'coords has extra keys: {extra_keys}')
+                raise SchemaError(f"coords has extra keys: {extra_keys}")
 
         for key, da_schema in self.coords.items():
             if key not in coords:
-                raise SchemaError(f'key {key} not in coords')
+                raise SchemaError(f"key {key} not in coords")
             else:
                 da_schema.validate(coords[key])
 
     @property
     def json(self) -> dict:
-        obj = {
-            'require_all_keys': self.require_all_keys,
-            'allow_extra_keys': self.allow_extra_keys,
-            'coords': {k: v.json for k, v in self.coords.items()},
+        return {
+            "require_all_keys": self.require_all_keys,
+            "allow_extra_keys": self.allow_extra_keys,
+            "coords": {k: v.json for k, v in self.coords.items()},
         }
-        return obj
