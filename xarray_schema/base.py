@@ -10,7 +10,6 @@ class SchemaError(Exception):
 
 
 class BaseSchema:
-
     _json_schema: Dict[str, Any]
 
     # def validate(self, obj: Any) -> None:
