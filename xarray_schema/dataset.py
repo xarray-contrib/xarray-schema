@@ -34,7 +34,6 @@ class DatasetSchema(BaseSchema):
         attrs: Union[AttrsSchema, Dict[Hashable, AttrSchema], None] = None,
         checks: Iterable[Callable] = None,
     ) -> None:
-
         self.data_vars = data_vars  # type: ignore
         self.coords = coords  # type: ignore
         self.attrs = attrs  # type: ignore

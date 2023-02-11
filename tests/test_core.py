@@ -171,7 +171,6 @@ def test_unknown_array_type_raises():
 
 
 def test_dataarray_empty_constructor():
-
     da = xr.DataArray(np.ones(4, dtype='i4'))
     da_schema = DataArraySchema()
     assert hasattr(da_schema, 'validate')
@@ -222,7 +221,6 @@ def test_dataset_empty_constructor():
 
 
 def test_dataset_example(ds):
-
     ds_schema = DatasetSchema(
         {
             'foo': DataArraySchema(name='foo', dtype=np.int32, dims=['x']),
