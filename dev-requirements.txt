@@ -3,7 +3,7 @@ jsonschema
 pytest
 pytest-cov
 mypy==0.982
-invoke==2.1.1
+invoke==2.1.2
 types-jsonschema
 types-setuptools==67.8.0.0
 -r requirements.txt
