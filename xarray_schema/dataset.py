@@ -47,9 +47,9 @@ class DatasetSchema(BaseSchema):
                 k: DataArraySchema.from_json(v) for k, v in obj['data_vars'].items()
             }
         if 'coords' in obj:
-            kwargs['coords'] = CoordsSchema.from_json(obj["coords"])
+            kwargs['coords'] = CoordsSchema.from_json(obj['coords'])
         if 'attrs' in obj:
-            kwargs['attrs'] = AttrsSchema.from_json(obj["attrs"])
+            kwargs['attrs'] = AttrsSchema.from_json(obj['attrs'])
 
         return cls(**kwargs)
 

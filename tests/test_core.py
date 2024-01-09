@@ -227,13 +227,13 @@ def test_dataset_example(ds):
             'bar': DataArraySchema(name='bar', dtype=np.floating, dims=['x', 'y']),
         },
         coords={'x': DataArraySchema(name='x', dtype=np.int64, dims=['x'])},
-        attrs={}
+        attrs={},
     )
 
     jsonschema.validate(ds_schema.json, ds_schema._json_schema)
 
     assert list(ds_schema.json['data_vars'].keys()) == ['foo', 'bar']
-    assert list(ds_schema.json['coords']["coords"].keys()) == ['x']
+    assert list(ds_schema.json['coords']['coords'].keys()) == ['x']
     ds_schema.validate(ds)
 
     ds2 = ds.copy()
