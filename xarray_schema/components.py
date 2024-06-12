@@ -345,7 +345,7 @@ class AttrSchema(BaseSchema):
         '''
         if self.type is not None:
             if not isinstance(attr, self.type):
-                SchemaError(f'attrs {attr} is not of type {self.type}')
+                raise SchemaError(f'attrs {attr} is not of type {self.type}')
 
         if self.value is not None:
             if self.value is not None and self.value != attr:
