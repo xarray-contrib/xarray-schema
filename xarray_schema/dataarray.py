@@ -276,12 +276,15 @@ class CoordsSchema(BaseSchema):
     _json_schema = {
         'type': 'object',
         'properties': {
-            'require_all_keys': {
-                'type': 'boolean'
-            },  # Question: is this the same as JSON's additionalProperties?
+            'require_all_keys': {'type': 'boolean'},
             'allow_extra_keys': {'type': 'boolean'},
-            'coords': {'type': 'object'},
+            'coords': {
+                'type': 'object',
+                'additionalProperties': DataArraySchema._json_schema
+            },
         },
+        'required': ['coords'],
+        'additionalProperties': False,
     }
 
     def __init__(

@@ -280,7 +280,7 @@ def test_dataset_example(ds):
     # json roundtrip
     rt_schema = DatasetSchema.from_json(ds_schema.json)
     assert isinstance(rt_schema, DatasetSchema)
-    rt_schema.json == ds_schema.json
+    assert rt_schema.json == ds_schema.json
 
 
 def test_checks_ds(ds):

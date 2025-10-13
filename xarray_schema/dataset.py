@@ -25,6 +25,8 @@ class DatasetSchema(BaseSchema):
             'coords': {'type': 'object'},
             'attrs': {'type': 'object'},
         },
+        'required': [],
+        'additionalProperties': False,
     }
 
     def __init__(
