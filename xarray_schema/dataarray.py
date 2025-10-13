@@ -278,10 +278,7 @@ class CoordsSchema(BaseSchema):
         'properties': {
             'require_all_keys': {'type': 'boolean'},
             'allow_extra_keys': {'type': 'boolean'},
-            'coords': {
-                'type': 'object',
-                'additionalProperties': DataArraySchema._json_schema
-            },
+            'coords': {'type': 'object', 'additionalProperties': DataArraySchema._json_schema},
         },
         'required': ['coords'],
         'additionalProperties': False,

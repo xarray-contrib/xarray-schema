@@ -381,7 +381,7 @@ class AttrsSchema(BaseSchema):
             'attrs': {'type': 'object'},
         },
         'required': ['attrs'],
-        'additionalProperties': False
+        'additionalProperties': False,
     }
 
     def __init__(

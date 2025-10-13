@@ -129,14 +129,20 @@ def test_attr_schema(type, value, validate, json):
         (DTypeSchema, (np.integer,), {}, np.float32, r'.*float.*'),
         (DimsSchema, (('foo', 'bar'),), {}, ('foo',), r'.*length.*'),
         (DimsSchema, (('foo', 'bar'),), {}, ('foo', 'baz'), r'.*mismatch.*'),
-        (ShapeSchema, ((1, 2, None),), {} ,(1, 2), r'.*number of dimensions.*'),
+        (ShapeSchema, ((1, 2, None),), {}, (1, 2), r'.*number of dimensions.*'),
         (ShapeSchema, ((1, 4, 4),), {}, (1, 3, 4), r'.*mismatch.*'),
         (NameSchema, ('foo',), {}, 'bar', r'.*name bar != foo.*'),
         (ArrayTypeSchema, (np.ndarray,), {}, 'bar', r'.*array_type.*'),
         # schema_args for ChunksSchema include [chunks, dims, shape]
         (ChunksSchema, ({'x': 3},), {}, (((2, 2),), ('x',), (4,)), r'.*(3).*'),
         (ChunksSchema, ({'x': (2, 1)},), {}, (((2, 2),), ('x',), (4,)), r'.*(2, 1).*'),
-        (ChunksSchema, ({'x': (2, 1)},), {}, (None, ('x',), (4,)), r'.*expected array to be chunked.*'),
+        (
+            ChunksSchema,
+            ({'x': (2, 1)},),
+            {},
+            (None, ('x',), (4,)),
+            r'.*expected array to be chunked.*',
+        ),
         (ChunksSchema, (True,), {}, (None, ('x',), (4,)), r'.*expected array to be chunked.*'),
         (
             ChunksSchema,
@@ -148,7 +154,13 @@ def test_attr_schema(type, value, validate, json):
         (ChunksSchema, ({'x': -1},), {}, (((1, 2, 1),), ('x',), (4,)), r'.* did not match.*'),
         (ChunksSchema, ({'x': 2},), {}, (((2, 3, 2),), ('x',), (7,)), r'.* did not match.*'),
         (ChunksSchema, ({'x': 2},), {}, (((2, 2, 3),), ('x',), (7,)), r'.* did not match.*'),
-        (ChunksSchema, ({'x': 2, 'y': -1},), {}, (((2, 2), (5, 5)), ('x', 'y'), (4, 10)), r'.*(5).*'),
+        (
+            ChunksSchema,
+            ({'x': 2, 'y': -1},),
+            {},
+            (((2, 2), (5, 5)), ('x', 'y'), (4, 10)),
+            r'.*(5).*',
+        ),
         (
             AttrsSchema,
             ({'foo': AttrSchema(type=int)},),
@@ -194,7 +206,7 @@ def test_attr_schema(type, value, validate, json):
         (
             CoordsSchema,
             ({'x': DataArraySchema()},),
-            {"allow_extra_keys": False},
+            {'allow_extra_keys': False},
             [{'x': xr.DataArray([0, 1]), 'y': xr.DataArray([0, 1])}],
             r'coords has extra keys.*',
         ),
