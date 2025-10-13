@@ -124,36 +124,72 @@ def test_attr_schema(type, value, validate, json):
 
 
 @pytest.mark.parametrize(
-    'component, schema_args, validate, match',
+    'component, schema_args, schema_kwargs, validate, match',
     [
-        (DTypeSchema, np.integer, np.float32, r'.*float.*'),
-        (DimsSchema, ('foo', 'bar'), ('foo',), r'.*length.*'),
-        (DimsSchema, ('foo', 'bar'), ('foo', 'baz'), r'.*mismatch.*'),
-        (ShapeSchema, (1, 2, None), (1, 2), r'.*number of dimensions.*'),
-        (ShapeSchema, (1, 4, 4), (1, 3, 4), r'.*mismatch.*'),
-        (NameSchema, 'foo', 'bar', r'.*name bar != foo.*'),
-        (ArrayTypeSchema, np.ndarray, 'bar', r'.*array_type.*'),
+        (DTypeSchema, (np.integer,), {}, np.float32, r'.*float.*'),
+        (DimsSchema, (('foo', 'bar'),), {}, ('foo',), r'.*length.*'),
+        (DimsSchema, (('foo', 'bar'),), {}, ('foo', 'baz'), r'.*mismatch.*'),
+        (ShapeSchema, ((1, 2, None),), {} ,(1, 2), r'.*number of dimensions.*'),
+        (ShapeSchema, ((1, 4, 4),), {}, (1, 3, 4), r'.*mismatch.*'),
+        (NameSchema, ('foo',), {}, 'bar', r'.*name bar != foo.*'),
+        (ArrayTypeSchema, (np.ndarray,), {}, 'bar', r'.*array_type.*'),
         # schema_args for ChunksSchema include [chunks, dims, shape]
-        (ChunksSchema, {'x': 3}, (((2, 2),), ('x',), (4,)), r'.*(3).*'),
-        (ChunksSchema, {'x': (2, 1)}, (((2, 2),), ('x',), (4,)), r'.*(2, 1).*'),
-        (ChunksSchema, {'x': (2, 1)}, (None, ('x',), (4,)), r'.*expected array to be chunked.*'),
-        (ChunksSchema, True, (None, ('x',), (4,)), r'.*expected array to be chunked.*'),
+        (ChunksSchema, ({'x': 3},), {}, (((2, 2),), ('x',), (4,)), r'.*(3).*'),
+        (ChunksSchema, ({'x': (2, 1)},), {}, (((2, 2),), ('x',), (4,)), r'.*(2, 1).*'),
+        (ChunksSchema, ({'x': (2, 1)},), {}, (None, ('x',), (4,)), r'.*expected array to be chunked.*'),
+        (ChunksSchema, (True,), {}, (None, ('x',), (4,)), r'.*expected array to be chunked.*'),
         (
             ChunksSchema,
-            False,
+            (False,),
+            {},
             (((2, 2),), ('x',), (4,)),
             r'.*expected unchunked array but it is chunked*',
         ),
-        (ChunksSchema, {'x': -1}, (((1, 2, 1),), ('x',), (4,)), r'.*did not match.*'),
-        (ChunksSchema, {'x': 2}, (((2, 3, 2),), ('x',), (7,)), r'.*did not match.*'),
-        (ChunksSchema, {'x': 2}, (((2, 2, 3),), ('x',), (7,)), r'.*did not match.*'),
-        (ChunksSchema, {'x': 2, 'y': -1}, (((2, 2), (5, 5)), ('x', 'y'), (4, 10)), r'.*(5).*'),
+        (ChunksSchema, ({'x': -1},), {}, (((1, 2, 1),), ('x',), (4,)), r'.* did not match.*'),
+        (ChunksSchema, ({'x': 2},), {}, (((2, 3, 2),), ('x',), (7,)), r'.* did not match.*'),
+        (ChunksSchema, ({'x': 2},), {}, (((2, 2, 3),), ('x',), (7,)), r'.* did not match.*'),
+        (ChunksSchema, ({'x': 2, 'y': -1},), {}, (((2, 2), (5, 5)), ('x', 'y'), (4, 10)), r'.*(5).*'),
+        (
+            AttrsSchema,
+            ({'foo': AttrSchema(type=int)},),
+            {},
+            [{'foo': 'bar'}],
+            r'attrs .* is not of type.*',
+        ),
+        (
+            AttrsSchema,
+            ({'foo': AttrSchema(value=1)},),
+            {},
+            [{'foo': 'bar'}],
+            r'value .* != .*',
+        ),
+        (
+            CoordsSchema,
+            ({'x': DataArraySchema(name='x')},),
+            {},
+            [{'x': xr.DataArray([0, 1], name='y')}],
+            r'name .* != .*',
+        ),
+        (
+            CoordsSchema,
+            ({'x': DataArraySchema(name='x', dtype=np.str_)},),
+            {},
+            [{'x': xr.DataArray([0, 1], name='x')}],
+            r'dtype .* != .*',
+        ),
+        (
+            CoordsSchema,
+            ({'x': DataArraySchema(name='x')},),
+            {"allow_extra_keys": False},
+            [{'x': xr.DataArray([0, 1], name='x'), 'y': xr.DataArray([0, 1], name='y')}],
+            r'coords has extra keys.*',
+        ),
     ],
 )
-def test_component_raises_schema_error(component, schema_args, validate, match):
-    schema = component(schema_args)
+def test_component_raises_schema_error(component, schema_args, schema_kwargs, validate, match):
+    schema = component(*schema_args, **schema_kwargs)
     with pytest.raises(SchemaError, match=match):
-        if component in [ChunksSchema]:  # special case construction
+        if component in (ChunksSchema, AttrsSchema, CoordsSchema):  # special case construction
             schema.validate(*validate)
         else:
             schema.validate(validate)
@@ -217,7 +253,7 @@ def test_dataset_empty_constructor():
     ds_schema = DatasetSchema()
     assert hasattr(ds_schema, 'validate')
     jsonschema.validate(ds_schema.json, ds_schema._json_schema)
-    ds_schema.json == {}
+    assert ds_schema.json == {}
 
 
 def test_dataset_example(ds):
