@@ -349,7 +349,7 @@ class AttrSchema(BaseSchema):
 
         if self.value is not None:
             if self.value is not None and self.value != attr:
-                raise SchemaError(f'name {attr} != {self.value}')
+                raise SchemaError(f'attrs {attr} != {self.value}')
 
     @property
     def json(self) -> dict:
@@ -376,12 +376,12 @@ class AttrsSchema(BaseSchema):
     _json_schema = {
         'type': 'object',
         'properties': {
-            'require_all_keys': {
-                'type': 'boolean'
-            },  # Question: is this the same as JSON's additionalProperties?
+            'require_all_keys': {'type': 'boolean'},
             'allow_extra_keys': {'type': 'boolean'},
             'attrs': {'type': 'object'},
         },
+        'required': ['attrs'],
+        'additionalProperties': False,
     }
 
     def __init__(
