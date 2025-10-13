@@ -105,7 +105,7 @@ def test_component_schema(component, schema_args, validate, json):
     jsonschema.validate(schema.json, schema._json_schema)
 
     # json roundtrip
-    component.from_json(schema.json).json == json
+    assert component.from_json(schema.json).json == json
 
 
 @pytest.mark.parametrize(
