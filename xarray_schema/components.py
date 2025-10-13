@@ -349,7 +349,7 @@ class AttrSchema(BaseSchema):
 
         if self.value is not None:
             if self.value is not None and self.value != attr:
-                raise SchemaError(f'value {attr} != {self.value}')
+                raise SchemaError(f'attrs {attr} != {self.value}')
 
     @property
     def json(self) -> dict:
