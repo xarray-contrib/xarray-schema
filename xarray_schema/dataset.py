@@ -47,9 +47,9 @@ class DatasetSchema(BaseSchema):
                 k: DataArraySchema.from_json(v) for k, v in obj['data_vars'].items()
             }
         if 'coords' in obj:
-            kwargs['coords'] = {k: CoordsSchema.from_json(v) for k, v in obj['coords'].items()}
-        if 'attrs' in obj:
-            kwargs['attrs'] = {k: AttrsSchema.from_json(v) for k, v in obj['attrs'].items()}
+            kwargs['coords'] = CoordsSchema.from_json(obj['coords'])
+        if 'attrs' in obj and obj['attrs'] != {}:
+            kwargs['attrs'] = AttrsSchema.from_json(obj['attrs'])
 
         return cls(**kwargs)
 
@@ -79,10 +79,10 @@ class DatasetSchema(BaseSchema):
                     else:
                         da_schema.validate(ds.data_vars[key])
 
-        if self.coords is not None:  # pragma: no cover
-            raise NotImplementedError('coords schema not implemented yet')
+        if self.coords is not None:
+            self.coords.validate(ds.coords)
 
-        if self.attrs:
+        if self.attrs is not None:
             self.attrs.validate(ds.attrs)
 
         if self.checks:
@@ -98,7 +98,7 @@ class DatasetSchema(BaseSchema):
         if value is None or isinstance(value, AttrsSchema):
             self._attrs = value
         else:
-            self._attrs = AttrsSchema(value)
+            self._attrs = AttrsSchema(**value)
 
     @property
     def data_vars(self) -> Optional[Dict[Hashable, Optional[DataArraySchema]]]:

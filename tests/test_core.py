@@ -24,7 +24,7 @@ def ds():
     ds = xr.Dataset(
         {
             'x': xr.DataArray(np.arange(4) - 2, dims='x'),
-            'foo': xr.DataArray(np.ones(4, dtype='i4'), dims='x'),
+            'foo': xr.DataArray(np.ones(4, dtype='i4'), dims='x', attrs=dict(units='K')),
             'bar': xr.DataArray(np.arange(8, dtype=np.float32).reshape(4, 2), dims=('x', 'y')),
         }
     )
@@ -222,29 +222,50 @@ def test_dataset_empty_constructor():
 
 def test_dataset_example(ds):
     ds_schema = DatasetSchema(
-        {
-            'foo': DataArraySchema(name='foo', dtype=np.int32, dims=['x']),
+        data_vars={
+            'foo': DataArraySchema(
+                name='foo',
+                dtype=np.int32,
+                dims=['x'],
+                attrs=AttrsSchema(attrs=dict(units=AttrSchema(value='K')))
+            ),
             'bar': DataArraySchema(name='bar', dtype=np.floating, dims=['x', 'y']),
-        }
+        },
+        coords={'x': DataArraySchema(name='x', dtype=np.int64, dims=['x'])},
+<<<<<<< HEAD
+=======
+        attrs={},
+>>>>>>> d3ba8807e2b69a26a98521c8ee927a13df0f0a5a
     )
 
     jsonschema.validate(ds_schema.json, ds_schema._json_schema)
 
     assert list(ds_schema.json['data_vars'].keys()) == ['foo', 'bar']
+    assert list(ds_schema.json['coords']['coords'].keys()) == ['x']
     ds_schema.validate(ds)
 
-    ds['foo'] = ds.foo.astype('float32')
+    ds2 = ds.copy()
+    ds2['foo'] = ds2.foo.astype('float32')
     with pytest.raises(SchemaError, match='dtype'):
-        ds_schema.validate(ds)
+        ds_schema.validate(ds2)
 
-    ds = ds.drop_vars('foo')
+    ds2 = ds2.drop_vars('foo')
     with pytest.raises(SchemaError, match='variable foo'):
-        ds_schema.validate(ds)
+        ds_schema.validate(ds2)
+
+    ds3 = ds.copy()
+    ds3['x'] = ds3.x.astype('float32')
+    with pytest.raises(SchemaError, match='dtype'):
+        ds_schema.validate(ds3)
+
+    ds3 = ds3.drop_vars('x')
+    with pytest.raises(SchemaError, match='coords has missing keys'):
+        ds_schema.validate(ds3)
 
     # json roundtrip
     rt_schema = DatasetSchema.from_json(ds_schema.json)
     assert isinstance(rt_schema, DatasetSchema)
-    rt_schema.json == ds_schema.json
+    assert rt_schema.json == ds_schema.json
 
 
 def test_checks_ds(ds):
@@ -271,7 +292,7 @@ def test_dataset_with_attrs_schema():
     expected_value = 'expected_value'
     actual_value = 'actual_value'
     ds = xr.Dataset(attrs={name: actual_value})
-    ds_schema = DatasetSchema(attrs={name: AttrSchema(value=expected_value)})
+    ds_schema = DatasetSchema(dict(attrs={name: AttrSchema(value=expected_value)}))
     jsonschema.validate(ds_schema.json, ds_schema._json_schema)
 
     ds_schema_2 = DatasetSchema(attrs=AttrsSchema({name: AttrSchema(value=expected_value)}))

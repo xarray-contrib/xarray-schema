@@ -149,7 +149,7 @@ class DataArraySchema(BaseSchema):
         if value is None or isinstance(value, AttrsSchema):
             self._attrs = value
         else:
-            self._attrs = AttrsSchema(value)
+            self._attrs = AttrsSchema(**value)
 
     @property
     def coords(self) -> Optional[CoordsSchema]:
@@ -213,7 +213,7 @@ class DataArraySchema(BaseSchema):
         if self.chunks is not None:
             self.chunks.validate(da.chunks, da.dims, da.shape)
 
-        if self.attrs:
+        if self.attrs is not None:
             self.attrs.validate(da.attrs)
 
         if self.array_type is not None:
